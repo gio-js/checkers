@@ -4,9 +4,9 @@
 CPP      = g++.exe -D__DEBUG__
 CC       = gcc.exe -D__DEBUG__
 WINDRES  = windres.exe
-OBJ      = obj/main.o obj/solution_strategy.o obj/tcp_server.o obj/tcp_client.o obj/generator.o
-LINKOBJ  = obj/main.o obj/solution_strategy.o obj/tcp_server.o obj/tcp_client.o obj/generator.o
-LIBS     = -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib" -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/lib" -static-libgcc -L"C:/software/checkers/SDL2-2.0.7/x86_64-w64-mingw32/lib" -L"C:/software/checkers/SDL2-2.0.7/i686-w64-mingw32/lib" -lws2_32 -lSDL2main -lSDL2 -g3
+OBJ      = obj/main.o obj/solution_strategy.o obj/tcp_server.o obj/tcp_client.o obj/generator.o obj/render_manager.o obj/session.o obj/utils.o
+LINKOBJ  = obj/main.o obj/solution_strategy.o obj/tcp_server.o obj/tcp_client.o obj/generator.o obj/render_manager.o obj/session.o obj/utils.o
+LIBS     = -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib" -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/lib" -static-libgcc -L"C:/software/checkers/SDL2-2.0.7/x86_64-w64-mingw32/lib" -L"C:/software/checkers/SDL2-2.0.7/i686-w64-mingw32/lib" -lws2_32 -lSDL2main -lSDL2 -lSDL2_ttf -g3
 INCS     = -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include" -I"C:/software/checkers/SDL2-2.0.7/x86_64-w64-mingw32/include" -I"C:/software/checkers/SDL2-2.0.7/i686-w64-mingw32/include"
 CXXINCS  = -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include/c++" -I"C:/software/checkers/SDL2-2.0.7/x86_64-w64-mingw32/include" -I"C:/software/checkers/SDL2-2.0.7/i686-w64-mingw32/include"
 BIN      = out/Checkers.exe
@@ -38,3 +38,12 @@ obj/tcp_client.o: tcp_client.c
 
 obj/generator.o: generator.c
 	$(CC) -c generator.c -o obj/generator.o $(CFLAGS)
+
+obj/render_manager.o: render_manager.c
+	$(CC) -c render_manager.c -o obj/render_manager.o $(CFLAGS)
+
+obj/session.o: session.c
+	$(CC) -c session.c -o obj/session.o $(CFLAGS)
+
+obj/utils.o: utils.c
+	$(CC) -c utils.c -o obj/utils.o $(CFLAGS)

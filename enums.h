@@ -1,3 +1,23 @@
+#ifndef ENUMS_H
+#define ENUMS_H
+
+/**
+ * Application screen types
+ */
+enum APPLICATION_SCREENS {
+    APPLICATION_SCREENS_MENU,
+    APPLICATION_SCREENS_GAME,
+    APPLICATION_SCREENS_EXIT
+};
+
+/**
+ * Application menu elements
+ */
+enum MENU_ELEMENT_TYPE {
+    MENU_ELEMENT_TYPE_SINGLE_PLAYER_GAME,
+    MENU_ELEMENT_TYPE_EXIT
+};
+
 /**
  * CELL type
  */
@@ -10,14 +30,24 @@ enum CELL_TYPE {
  * Player type
  */
 enum PLAYER_TYPE {
-    PLAYER_TYPE_WHITE,
-    PLAYER_TYPE_BLACK
+    PLAYER_TYPE_HUMAN,
+    PLAYER_TYPE_COMPUTER
+};
+
+/**
+ * Player main group color
+ */
+enum PLAYER_COLOR {
+    PLAYER_COLOR_WHITE,
+    PLAYER_COLOR_BLACK
 };
 
 /**
  * Pawn type
  */
 enum PAWN_TYPE {
-    SIMPLE_PIECE,
-    KING
+    PAWN_TYPE_SIMPLE_PIECE,
+    PAWN_TYPE_KING
 };
+
+#endif
