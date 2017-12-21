@@ -9,7 +9,7 @@
  */
 typedef struct Pawn {
 	enum PAWN_TYPE PawnType; // simple
-	enum PLAYER_COLOR Player;
+	enum PLAYER_COLOR PlayerColor;
 } t_Pawn;
 
 /*
@@ -18,16 +18,18 @@ typedef struct Pawn {
 typedef struct Player {
 	char* PlayerName; // player name
 	enum PLAYER_TYPE PlayerType;
+	enum PLAYER_COLOR PlayerColor;
 } t_Player;
 
 /*
  * Defines a checkers piece structure
  */
 typedef struct Piece {
-	t_Pawn *Pawn; // null if this is case of empty cell, otherwise pointing to a valid mem element
+	t_Pawn Pawn; // null if this is case of empty cell, otherwise pointing to a valid mem element
 	t_Player *Player; // piece related player
 	int X; // from left to right, starting from 0 to 15
 	int Y; // from top to bottom, starting from 0 to 15
+	int IsLost; // piece taken by the opponent
 } t_Piece;
 
 /*
@@ -57,9 +59,12 @@ typedef struct MoveStory {
  */
 typedef struct GameSession {
 	t_Piece Pieces[TABLE_PIECE_NUMBERS]; // all the available players
-	t_Player *FirstPlayer;
-	t_Player *SecondPlayer;
+	t_Player FirstPlayer;
+	t_Player SecondPlayer;
+	t_MoveStory *Movements;
 	t_Player *PlayerInTurn; // the player who is in charge for the next move
+	int cursorX;
+	int cursorY;
 } t_GameSession;
 
 
@@ -72,7 +77,7 @@ typedef struct ApplicationSession {
 	/**
 	 * Contains the current application game session
 	 */
-	t_GameSession *CurrentGameSession;
+	t_GameSession CurrentGameSession;
 
 	/**
 	 * Menu user selection

@@ -1,28 +1,11 @@
-#include "enums.h"
 #include "SDL2/SDL.h"
-#include "SDL2/SDL_ttf.h"
-#include "shared.h"
+#include "SDL2/SDL_image.h"
 #include "enums.h"
+#include "const.h"
+#include "shared.h"
 
 // create renderer
 static SDL_Renderer* renderer = NULL;
-static TTF_Font* Sans = NULL;
-
-// colors
-static const SDL_Color COLOR_WHITE = { 255, 255, 255 };
-static const SDL_Color COLOR_FIREBRICK = { 70, 13, 13 };
-
-/**
- * Draws specified text over the SDL renderer
- */
-void drawText(char *text, SDL_Color color, SDL_Rect rect) {
-	SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, text, color);
-	SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
-	SDL_RenderCopy(renderer, Message, NULL, &rect);
-
-	SDL_FreeSurface(surfaceMessage);
-	SDL_DestroyTexture(Message);
-}
 
 /**
  * handle event for the menu screen
@@ -36,18 +19,58 @@ void handleMenuEvents(SDL_KeyboardEvent key) {
 			}
 			break;
 		case SDLK_UP:
-			SharedApplicationSession.ScreenUserSelection --;
-			if (SharedApplicationSession.ScreenUserSelection < 0) {
+			if (SharedApplicationSession.ScreenUserSelection == 0) {
 				SharedApplicationSession.ScreenUserSelection = MENU_COUNT - 1;
+			} else {
+				SharedApplicationSession.ScreenUserSelection --;
 			}
 			break;
 		case SDLK_RETURN:
 			switch(SharedApplicationSession.ScreenUserSelection) {
 				case MENU_ELEMENT_TYPE_SINGLE_PLAYER_GAME:
 					SharedApplicationSession.CurrentScreen = APPLICATION_SCREENS_GAME;
+					break;
 				case MENU_ELEMENT_TYPE_EXIT:
 					SharedApplicationSession.CurrentScreen = APPLICATION_SCREENS_EXIT;
+					break;
 			}
+			break;
+	}
+}
+
+/**
+ * handle event for the in game screen
+ */
+void handleGameEvents(SDL_KeyboardEvent key) {
+	switch(key.keysym.sym) {
+		case SDLK_DOWN:
+			SharedApplicationSession.CurrentGameSession.cursorY ++;
+			if (SharedApplicationSession.CurrentGameSession.cursorY > MAXIMUM_Y_COORDINATE) {
+				SharedApplicationSession.CurrentGameSession.cursorY = 0;
+			}
+			break;
+		case SDLK_UP:
+			if (SharedApplicationSession.CurrentGameSession.cursorY == 0) {
+				SharedApplicationSession.CurrentGameSession.cursorY = MAXIMUM_Y_COORDINATE;
+			} else {
+				SharedApplicationSession.CurrentGameSession.cursorY --;
+			}
+			break;
+		case SDLK_RIGHT:
+			SharedApplicationSession.CurrentGameSession.cursorX ++;
+			if (SharedApplicationSession.CurrentGameSession.cursorX > MAXIMUM_X_COORDINATE) {
+				SharedApplicationSession.CurrentGameSession.cursorX = 0;
+			}
+			break;
+		case SDLK_LEFT:
+			if (SharedApplicationSession.CurrentGameSession.cursorX == 0) {
+				SharedApplicationSession.CurrentGameSession.cursorX = MAXIMUM_X_COORDINATE;
+			} else {
+				SharedApplicationSession.CurrentGameSession.cursorX --;
+			}
+			break;
+		case SDLK_RETURN:
+
 			break;
 	}
 }
@@ -60,7 +83,7 @@ void handleEvents(SDL_Event event) {
 	while (SDL_PollEvent(&event)) {
 
 		// handle quit
-		if (event.type== SDL_QUIT) {
+		if (event.type == SDL_QUIT) {
 			SharedApplicationSession.CurrentScreen = APPLICATION_SCREENS_EXIT;
 			break;
 		}
@@ -74,6 +97,10 @@ void handleEvents(SDL_Event event) {
 
 			case APPLICATION_SCREENS_MENU:
 				handleMenuEvents(event.key);
+				break;
+
+			case APPLICATION_SCREENS_GAME:
+				handleGameEvents(event.key);
 				break;
 
 		}
@@ -105,14 +132,15 @@ void renderMenu() {
 
 		char *menuText = getMenuDescription(index);
 		int textWidth, textHeight;
-		TTF_SizeText(Sans,menuText,&textWidth,&textHeight); // get text size
+		TTF_SizeText(SansMedium,menuText,&textWidth,&textHeight); // get text size
 		SDL_Rect Message_rect;
 		Message_rect.x = rect.x + (width - textWidth) / 2;
 		Message_rect.y = rect.y + (height - textHeight) / 2;
 		Message_rect.w = textWidth;
 		Message_rect.h = textHeight;
 
-		drawText(menuText, COLOR_WHITE, Message_rect);
+
+		drawText(renderer, SansMedium, menuText, COLOR_WHITE, Message_rect);
 	}
 
 }
@@ -123,10 +151,11 @@ void renderMenu() {
 void renderScene() {
 
 	// initialize sdl
-	if (SDL_Init(SDL_INIT_VIDEO) == 0 && TTF_Init() != -1) {
+	if (SDL_Init(SDL_INIT_VIDEO) == 0 && TTF_Init() != -1 && IMG_Init(IMG_INIT_PNG) != -1) {
 
 		// create shared font
-		Sans = TTF_OpenFont("OpenSans-Light.ttf", 20);
+		SansMedium = TTF_OpenFont("OpenSans-Light.ttf", 20);
+		SansSmall = TTF_OpenFont("OpenSans-Light.ttf", 14);
 
 		// create window
 		SDL_Window* window = NULL;
@@ -150,6 +179,10 @@ void renderScene() {
 						renderMenu();
 						break;
 
+					case APPLICATION_SCREENS_GAME:
+						renderGame(renderer, SharedApplicationSession.CurrentGameSession);
+						break;
+
 				}
 
 				// blit on screen renderer changes
@@ -171,6 +204,7 @@ void renderScene() {
 		}
 	}
 
+	IMG_Quit();
 	SDL_Quit();
 }
 
@@ -201,4 +235,5 @@ void renderScene() {
 //
 //	}
 //}
+
 

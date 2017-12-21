@@ -1,3 +1,5 @@
+#include "SDL2/SDL.h"
+
 #ifndef CONST_H
 #define CONST_H
 
@@ -19,7 +21,14 @@
 // max y for the piece position
 #define MAXIMUM_Y_COORDINATE 7
 
-// 12 pieces for each player (24 pieces total)
-#define TABLE_PIECE_NUMBERS 12 * 2
+// 12 pieces for each player
+#define PLAYER_PIECE_NUMBERS 12
+
+// 12 pieces for each player (24)
+#define TABLE_PIECE_NUMBERS 24
+
+// colors
+static const SDL_Color COLOR_FIREBRICK = (SDL_Color){ 70, 13, 13 };
+static const SDL_Color COLOR_WHITE = (SDL_Color){ 255, 255, 255 };
 
 #endif
