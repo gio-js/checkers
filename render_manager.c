@@ -29,6 +29,9 @@ void handleMenuEvents(SDL_KeyboardEvent key) {
 			switch(SharedApplicationSession.ScreenUserSelection) {
 				case MENU_ELEMENT_TYPE_SINGLE_PLAYER_GAME:
 					SharedApplicationSession.CurrentScreen = APPLICATION_SCREENS_GAME;
+
+					// re-initialize game session
+					initializeGameSession();
 					break;
 				case MENU_ELEMENT_TYPE_EXIT:
 					SharedApplicationSession.CurrentScreen = APPLICATION_SCREENS_EXIT;
@@ -42,35 +45,54 @@ void handleMenuEvents(SDL_KeyboardEvent key) {
  * handle event for the in game screen
  */
 void handleGameEvents(SDL_KeyboardEvent key) {
+	t_GameSession *gameSession = &SharedApplicationSession.CurrentGameSession;
+
+	// handle key event
 	switch(key.keysym.sym) {
+
 		case SDLK_DOWN:
-			SharedApplicationSession.CurrentGameSession.cursorY ++;
-			if (SharedApplicationSession.CurrentGameSession.cursorY > MAXIMUM_Y_COORDINATE) {
-				SharedApplicationSession.CurrentGameSession.cursorY = 0;
+			gameSession->cursorY ++;
+			if (gameSession->cursorY > MAXIMUM_Y_COORDINATE) {
+				gameSession->cursorY = 0;
 			}
 			break;
+
 		case SDLK_UP:
-			if (SharedApplicationSession.CurrentGameSession.cursorY == 0) {
-				SharedApplicationSession.CurrentGameSession.cursorY = MAXIMUM_Y_COORDINATE;
+			if (gameSession->cursorY == 0) {
+				gameSession->cursorY = MAXIMUM_Y_COORDINATE;
 			} else {
-				SharedApplicationSession.CurrentGameSession.cursorY --;
+				gameSession->cursorY --;
 			}
 			break;
+
 		case SDLK_RIGHT:
-			SharedApplicationSession.CurrentGameSession.cursorX ++;
-			if (SharedApplicationSession.CurrentGameSession.cursorX > MAXIMUM_X_COORDINATE) {
-				SharedApplicationSession.CurrentGameSession.cursorX = 0;
+			gameSession->cursorX ++;
+			if (gameSession->cursorX > MAXIMUM_X_COORDINATE) {
+				gameSession->cursorX = 0;
 			}
 			break;
+
 		case SDLK_LEFT:
-			if (SharedApplicationSession.CurrentGameSession.cursorX == 0) {
-				SharedApplicationSession.CurrentGameSession.cursorX = MAXIMUM_X_COORDINATE;
+			if (gameSession->cursorX == 0) {
+				gameSession->cursorX = MAXIMUM_X_COORDINATE;
 			} else {
-				SharedApplicationSession.CurrentGameSession.cursorX --;
+				gameSession->cursorX --;
+			}
+			break;
+
+		case SDLK_ESCAPE:
+			if (isAnyMovementInProgress(gameSession) == 1) {
+				undoBeginPlayerMovement(gameSession);
+			} else {
+				SharedApplicationSession.CurrentScreen = APPLICATION_SCREENS_MENU;
 			}
 			break;
 		case SDLK_RETURN:
-
+			if (isAnyMovementInProgress(gameSession) == 1) {
+				endPlayerMovement(gameSession, gameSession->cursorX, gameSession->cursorY);
+			} else {
+				beginPlayerMovement(gameSession, gameSession->cursorX, gameSession->cursorY);
+			}
 			break;
 	}
 }
@@ -180,7 +202,7 @@ void renderScene() {
 						break;
 
 					case APPLICATION_SCREENS_GAME:
-						renderGame(renderer, SharedApplicationSession.CurrentGameSession);
+						renderGame(renderer, &SharedApplicationSession.CurrentGameSession);
 						break;
 
 				}

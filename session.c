@@ -2,24 +2,27 @@
 #include "shared.h"
 #include "enums.h"
 
+
 /**
- * Generates a new local game session
+ * Initialize the game session
  */
-void initializeSharedSession() {
+void initializeGameSession() {
 	t_GameSession gameSession;
 
 	gameSession.FirstPlayer = (t_Player) {
 		"Player1", PLAYER_TYPE_HUMAN, PLAYER_COLOR_WHITE
 	};
-	
+
 	gameSession.SecondPlayer = (t_Player) {
 		"Computer", PLAYER_TYPE_COMPUTER, PLAYER_COLOR_BLACK
 	};
-	
+
 	gameSession.PlayerInTurn = &gameSession.FirstPlayer;
-	gameSession.Movements = NULL;
+	//gameSession.Movements = NULL;
+	gameSession.movementInProgress = 0;
 	gameSession.cursorX = 0;
 	gameSession.cursorY = 0;
+	gameSession.currentMove.Piece = malloc(sizeof (t_Piece*));
 
 	// players pieces
 	int index = 0;
@@ -55,6 +58,13 @@ void initializeSharedSession() {
 	}
 
 	SharedApplicationSession.CurrentGameSession = gameSession;
+}
+
+/**
+ * Generates a new local game session
+ */
+void initializeSharedSession() {
+	initializeGameSession();
 	SharedApplicationSession.ScreenUserSelection = MENU_ELEMENT_TYPE_SINGLE_PLAYER_GAME;
 	SharedApplicationSession.CurrentScreen = APPLICATION_SCREENS_MENU;
 }

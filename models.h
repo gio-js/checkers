@@ -29,7 +29,7 @@ typedef struct Piece {
 	t_Player *Player; // piece related player
 	int X; // from left to right, starting from 0 to 15
 	int Y; // from top to bottom, starting from 0 to 15
-	int IsLost; // piece taken by the opponent
+	int IsTaken; // piece taken by the opponent
 } t_Piece;
 
 /*
@@ -51,7 +51,7 @@ typedef struct Move {
  */
 typedef struct MoveStory {
 	t_Move *Movement;
-	struct MoveStory *NextMovement;
+	struct MoveStory *PreviousMovement;
 } t_MoveStory;
 
 /*
@@ -65,6 +65,8 @@ typedef struct GameSession {
 	t_Player *PlayerInTurn; // the player who is in charge for the next move
 	int cursorX;
 	int cursorY;
+	int movementInProgress;
+	t_Move currentMove;
 } t_GameSession;
 
 

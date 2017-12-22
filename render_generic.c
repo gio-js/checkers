@@ -31,13 +31,13 @@ void drawPawnSimplePiece(SDL_Renderer* renderer, int playerColor, int pawnType, 
 
 			if (pawnType == PAWN_TYPE_SIMPLE_PIECE) {
 				if (pawnSimplePieceTextureWhite == NULL) {
-					image = IMG_Load("images/pawn_simple_piece_white.png");
+					image = (SDL_Surface*)IMG_Load("images/pawn_simple_piece_white.png");
 					pawnSimplePieceTextureWhite = SDL_CreateTextureFromSurface(renderer, image);
 				}
 				pawnSurface = pawnSimplePieceTextureWhite;
 			} else {
 				if (pawnKingTextureWhite == NULL) {
-					image = IMG_Load("images/pawn_simple_piece_white.png");
+					image = (SDL_Surface*)IMG_Load("images/pawn_simple_piece_white.png");
 					pawnKingTextureWhite = SDL_CreateTextureFromSurface(renderer, image);
 				}
 				pawnSurface = pawnKingTextureWhite;
@@ -47,13 +47,13 @@ void drawPawnSimplePiece(SDL_Renderer* renderer, int playerColor, int pawnType, 
 		case PLAYER_COLOR_BLACK:
 			if (pawnType == PAWN_TYPE_SIMPLE_PIECE) {
 				if (pawnSimplePieceTextureBlack == NULL) {
-					image = IMG_Load("images/pawn_simple_piece_black.png");
+					image = (SDL_Surface*)IMG_Load("images/pawn_simple_piece_black.png");
 					pawnSimplePieceTextureBlack = SDL_CreateTextureFromSurface(renderer, image);
 				}
 				pawnSurface = pawnSimplePieceTextureBlack;
 			} else {
 				if (pawnKingTextureBlack == NULL) {
-					image = IMG_Load("images/pawn_simple_piece_white.png");
+					image = (SDL_Surface*)IMG_Load("images/pawn_simple_piece_white.png");
 					pawnKingTextureBlack = SDL_CreateTextureFromSurface(renderer, image);
 				}
 				pawnSurface = pawnKingTextureBlack;

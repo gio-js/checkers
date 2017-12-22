@@ -47,7 +47,7 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
 		SDL_RenderFillRect(renderer, &rect);
 
 
-		t_Piece *piece = getCellByCoordinates(gameSession, cellX, cellY);
+		t_Piece *piece = getPieceByCoordinates(gameSession, cellX, cellY);
 
 		if (piece != NULL)
 			drawPawnSimplePiece(renderer, piece->Pawn.PlayerColor, piece->Pawn.PawnType, rect.x, rect.y, rect.w, rect.h);
@@ -76,7 +76,12 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
 	// draw cursor rectangle
 	int selectionX = startX + (gameSession->cursorX * squareWidth);
 	int selectionY = startY + (gameSession->cursorY * squareHeight);
-	SDL_SetRenderDrawColor(renderer, 255,165,0, SDL_ALPHA_OPAQUE);
+
+	if (gameSession->movementInProgress==0)
+		SDL_SetRenderDrawColor(renderer, 255,165,0, SDL_ALPHA_OPAQUE);
+	else
+		SDL_SetRenderDrawColor(renderer, 236,39,243, SDL_ALPHA_OPAQUE);
+
 	SDL_RenderDrawRect(renderer, &(SDL_Rect) {
 		selectionX,selectionY,squareWidth,squareHeight
 	});
@@ -89,7 +94,30 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
  * Render the entire game screen
  */
 void renderGameMoveMessage(SDL_Renderer* renderer, t_GameSession *gameSession, int areaX, int areaY, int availableWidth, int availableHeight) {
+	int textX = 10, textY = areaY, textWidth = 0, textHeight = 0, marginTop = 15;
+	SDL_SetRenderDrawColor(renderer, 67,202,18, SDL_ALPHA_OPAQUE);
 
+	// draw player in turn (in charge for the next move)
+	char textMoveInfo[100];
+	sprintf(textMoveInfo, "Player in turn: %s", gameSession->PlayerInTurn->PlayerName);
+
+	TTF_SizeText(SansSmall,textMoveInfo,&textWidth,&textHeight); // get text size
+	drawText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, &(SDL_Rect) {
+		textX, textY, textWidth, textHeight
+	});
+
+
+	// draw info command
+	if (gameSession->movementInProgress==0)
+		sprintf(textMoveInfo, "Press Enter to select \n the piece to move. \n ESC to leave the game.");
+	else if (gameSession->movementInProgress==1)
+		sprintf(textMoveInfo, "Press Enter to release \n the piece \nor ESC to change selection.");
+
+	textY += textHeight + marginTop;
+	TTF_SizeText(SansSmall,textMoveInfo,&textWidth,&textHeight); // get text size
+	drawText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, &(SDL_Rect) {
+		textX, textY, textWidth, textHeight
+	});
 }
 
 /**
@@ -105,9 +133,9 @@ void renderPlayerInfo(SDL_Renderer* renderer, t_GameSession *gameSession, t_Play
 	for (indexPiece = 0; indexPiece < TABLE_PIECE_NUMBERS; indexPiece++) {
 		t_Piece piece = gameSession->Pieces[indexPiece];
 		if (piece.Player == player)
-			pieceLost += (piece.IsLost == 1 ? 1 : 0);
+			pieceLost += (piece.IsTaken == 1 ? 1 : 0);
 		else
-			pieceTaken += (piece.IsLost == 1 ? 1 : 0);
+			pieceTaken += (piece.IsTaken == 1 ? 1 : 0);
 	}
 	pieceInGame = PLAYER_PIECE_NUMBERS - pieceLost;
 
@@ -156,16 +184,16 @@ void renderPlayerInfo(SDL_Renderer* renderer, t_GameSession *gameSession, t_Play
 void renderGameInfo(SDL_Renderer* renderer, t_GameSession *gameSession, int areaX, int availableWidth, int availableHeight) {
 
 	renderPlayerInfo(renderer, gameSession, &gameSession->FirstPlayer, areaX, 10, availableWidth, availableHeight);
-	
+
 	renderPlayerInfo(renderer, gameSession, &gameSession->SecondPlayer, areaX, 150, availableWidth, availableHeight);
 
+	renderGameMoveMessage(renderer, gameSession, areaX, 290, availableWidth, availableHeight);
 }
 
 /**
  * Render the entire game screen
  */
 void renderGame(SDL_Renderer* renderer, t_GameSession *gameSession) {
-
 	int checkersGameWidth = SCREEN_WIDTH * 0.7;
 	int gameInfoWidth = SCREEN_WIDTH - checkersGameWidth;
 
