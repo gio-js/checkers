@@ -10,7 +10,7 @@ t_Piece* getPieceByCoordinates(t_GameSession *gameSession, int x, int y) {
 	for(index = 0; index < TABLE_PIECE_NUMBERS; index++) {
 		t_Piece piece = gameSession->Pieces[index];
 
-		if (piece.X == x && piece.Y == y)
+		if (piece.X == x && piece.Y == y && piece.IsTaken != 1)
 			return &gameSession->Pieces[index];
 	}
 	return NULL;
@@ -45,22 +45,31 @@ int checkIsValidMove(t_Move *movement, t_GameSession *gameSession) {
 	if (destination != NULL)
 		return 0;
 
-	// must be a diagonal movement (single or a take)
 	int deltaX = movement->Xto - movement->Xfrom;
 	int deltaY = movement->Yto - movement->Yfrom;
-	if (deltaX != deltaY)
-		return 0; // not a diagonal movement
 
-	if (abs(deltaX) != 1 && abs(deltaX) != 3) // simple move or a take
+	// (simple piece) white only downside direction
+	if (movement->Piece->Pawn.PawnType == PAWN_TYPE_SIMPLE_PIECE &&
+	        movement->Piece->Pawn.PlayerColor == PLAYER_COLOR_WHITE &&
+	        deltaY < 0)
 		return 0;
 
-	if (abs(deltaX) == 3) {// there must be a piece in the middle diagonal movement
-		int gap = (deltaX > 0 ? 1: -1);
-		t_Piece *takenPiece = getPieceByCoordinates(gameSession, movement->Xfrom + gap, movement->Yto + gap);
+	// (simple piece) black only downside direction
+	if (movement->Piece->Pawn.PawnType == PAWN_TYPE_SIMPLE_PIECE &&
+	        movement->Piece->Pawn.PlayerColor == PLAYER_COLOR_BLACK &&
+	        deltaY > 0)
+		return 0;
 
-		if (takenPiece == NULL)
-			return 0;
-	}
+	// must be a diagonal movement (single or a take)
+	if (abs(deltaX) != abs(deltaY))
+		return 0; // not a diagonal movement
+
+	if (abs(deltaX) != 1 && abs(deltaX) != 2) // simple move or a take
+		return 0;
+
+	int isATake = checkIsTakeMove(movement, gameSession);
+	if (abs(deltaX) == 2 && isATake == 0)
+		return 0;
 
 	return 1;
 }
@@ -81,34 +90,32 @@ int checkIsKingMove(t_Move *movement, t_GameSession *gameSession) {
 /**
  * Checks if the movement is a take for another piece (0:no, 1:yes)
  */
-int checkIsTakeMove(t_Move *movement, t_GameSession *gameSession) {
+t_Piece* getTakenPieceByMove(t_Move *movement, t_GameSession *gameSession) {
 	int deltaX = movement->Xto - movement->Xfrom;
 	int deltaY = movement->Yto - movement->Yfrom;
 
-	if (abs(deltaX) == 3) {// there must be a piece in the middle diagonal movement
-		int gap = (deltaX > 0 ? 1: -1);
-		t_Piece *takenPiece = getPieceByCoordinates(gameSession, movement->Xfrom + gap, movement->Yto + gap);
-
-		if (takenPiece == NULL)
-			return 1;
+	if (abs(deltaX) == 2) { // there must be a piece in the middle diagonal movement
+	
+		t_Piece *takenPiece = getPieceByCoordinates(gameSession, movement->Xfrom + (deltaX/2), movement->Yfrom + (deltaY/2));
+		
+		// filter, a simple pawn can not eat a king!
+		if (takenPiece != NULL && 
+			movement->Piece->Pawn.PawnType == PAWN_TYPE_SIMPLE_PIECE &&
+			takenPiece->Pawn.PawnType == PAWN_TYPE_KING);
+			return NULL;
+	
+		return takenPiece;
 	}
 
-	return 0;
+	return NULL;
 }
 
 /**
  * Checks if the movement is a take for another piece (0:no, 1:yes)
  */
-t_Piece* getTakenPieceByMove(t_Move *movement, t_GameSession *gameSession) {
-	int deltaX = movement->Xto - movement->Xfrom;
-	int deltaY = movement->Yto - movement->Yfrom;
-
-	if (abs(deltaX) == 3) {// there must be a piece in the middle diagonal movement
-		int gap = (deltaX > 0 ? 1: -1);
-		return getPieceByCoordinates(gameSession, movement->Xfrom + gap, movement->Yto + gap);
-	}
-
-	return NULL;
+int checkIsTakeMove(t_Move *movement, t_GameSession *gameSession) {
+	t_Piece *takenPiece = getTakenPieceByMove(movement, gameSession);
+	return (takenPiece == NULL ? 0 : 1);
 }
 
 /**
@@ -216,9 +223,9 @@ void endPlayerMovement(t_GameSession *gameSession, int xTo, int yTo) {
 	gameSession->movementInProgress = 0;
 
 	// switch player
-	if (gameSession->PlayerInTurn == &gameSession->FirstPlayer)
-		gameSession->PlayerInTurn = &gameSession->SecondPlayer;
+	if (gameSession->PlayerInTurn == &(gameSession->FirstPlayer))
+		gameSession->PlayerInTurn = &(gameSession->SecondPlayer);
 	else
-		gameSession->PlayerInTurn = &gameSession->FirstPlayer;
+		gameSession->PlayerInTurn = &(gameSession->FirstPlayer);
 
 }

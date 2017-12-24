@@ -7,10 +7,10 @@
 #define MENU_COUNT 2
 
 // screen width
-#define SCREEN_WIDTH 640
+#define SCREEN_WIDTH 800
 
 // screen height
-#define SCREEN_HEIGHT 480
+#define SCREEN_HEIGHT 600
 
 // number of table cells
 #define CELL_NUMBERS 64

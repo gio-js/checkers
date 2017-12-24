@@ -20,9 +20,21 @@ void drawText(SDL_Renderer* renderer, TTF_Font *font, char *text, SDL_Color colo
 }
 
 /**
+ * Draws specified text over the SDL renderer
+ */
+void drawWrappedText(SDL_Renderer* renderer, TTF_Font *font, char *text, SDL_Color color, SDL_Rect rect, int maxWidth) {
+	SDL_Surface* surfaceMessage = TTF_RenderText_Blended_Wrapped(font, text, color, maxWidth);
+	SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
+	SDL_RenderCopy(renderer, Message, NULL, &rect);
+
+	SDL_FreeSurface(surfaceMessage);
+	SDL_DestroyTexture(Message);
+}
+
+/**
  * Render cell piece image
  */
-void drawPawnSimplePiece(SDL_Renderer* renderer, int playerColor, int pawnType, int x, int y, int width, int height) {
+void drawPiece(SDL_Renderer* renderer, int playerColor, int pawnType, int x, int y, int width, int height) {
 	SDL_Texture* pawnSurface;
 	SDL_Surface* image = NULL;
 
@@ -37,7 +49,7 @@ void drawPawnSimplePiece(SDL_Renderer* renderer, int playerColor, int pawnType, 
 				pawnSurface = pawnSimplePieceTextureWhite;
 			} else {
 				if (pawnKingTextureWhite == NULL) {
-					image = (SDL_Surface*)IMG_Load("images/pawn_simple_piece_white.png");
+					image = (SDL_Surface*)IMG_Load("images/pawn_king_white.png");
 					pawnKingTextureWhite = SDL_CreateTextureFromSurface(renderer, image);
 				}
 				pawnSurface = pawnKingTextureWhite;
@@ -53,7 +65,7 @@ void drawPawnSimplePiece(SDL_Renderer* renderer, int playerColor, int pawnType, 
 				pawnSurface = pawnSimplePieceTextureBlack;
 			} else {
 				if (pawnKingTextureBlack == NULL) {
-					image = (SDL_Surface*)IMG_Load("images/pawn_simple_piece_white.png");
+					image = (SDL_Surface*)IMG_Load("images/pawn_king_black.png");
 					pawnKingTextureBlack = SDL_CreateTextureFromSurface(renderer, image);
 				}
 				pawnSurface = pawnKingTextureBlack;
