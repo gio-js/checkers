@@ -50,4 +50,12 @@ enum PAWN_TYPE {
     PAWN_TYPE_KING
 };
 
+/**
+ * Pawn type
+ */
+enum GAME_PRESETS_TYPE {
+    GAME_PRESETS_TYPE_DEFAULT = 0,
+    GAME_PRESETS_TYPE_TEST1
+};
+
 #endif

@@ -33,6 +33,23 @@ typedef struct Piece {
 } t_Piece;
 
 /*
+ * Defines a list of piece that must be taken in the current movement
+ */
+typedef struct PieceMandatoryTake {
+	t_Piece *Piece; // the piece to take
+	struct PieceMandatoryTake *Next;
+} t_PieceMandatoryTake;
+
+/*
+ * Defines a list of piece that must be taken in the current movement
+ */
+typedef struct PlayerMandatoryTake {
+	t_Piece *ReferredPiece; // ref piece who must start the take movement and eat the opponent piece
+	t_PieceMandatoryTake MandatoryTakes; // mandatory takes elements
+	struct PlayerMandatoryTake *Next;
+} t_PlayerMandatoryTake;
+
+/*
  * Defines the structure of a piece movement
  */
 typedef struct Move {
@@ -42,6 +59,7 @@ typedef struct Move {
 	int Xto; // destination movement position
 	int Yto;
 	int IsATake; // indicates if the movement ends as a take for the player
+	t_Piece *TakenPiece; // indicates which piece has been taken by this movement
 	int BecomeAKing; // indicates if the movment transform the piece to a king type
 	double Score; // define a virtual score for the movevement (i.e. if the movement ends with a take, the score is increased as 1)
 } t_Move;
@@ -63,12 +81,13 @@ typedef struct GameSession {
 	t_Player SecondPlayer;
 	t_MoveStory *Movements;
 	t_Player *PlayerInTurn; // the player who is in charge for the next move
-	int cursorX;
-	int cursorY;
-	int movementInProgress;
-	t_Move currentMove;
+	int CursorX;
+	int CursorY;
+	int MovementInProgress;
+	t_MoveStory CurrentMovements;
+	t_PlayerMandatoryTake PlayerMandatoryTakes; // the list containing the mandatory adiacent pieces the the moving pawn must take (a single one among the list)
+	int HasPlayerMandatoryTakes; // a flag that indicate whether the player has any mandatory movement in order to take some opponent pieces
 } t_GameSession;
-
 
 
 /*
@@ -85,7 +104,7 @@ typedef struct ApplicationSession {
 	 * Menu user selection
 	 */
 	enum MENU_ELEMENT_TYPE ScreenUserSelection;
-	
+
 	/**
 	 * Current game screen
 	 */

@@ -31,7 +31,7 @@ void handleMenuEvents(SDL_KeyboardEvent key) {
 					SharedApplicationSession.CurrentScreen = APPLICATION_SCREENS_GAME;
 
 					// re-initialize game session
-					initializeGameSession();
+					initializeGameSession(GAME_PRESETS_TYPE_DEFAULT);
 					break;
 				case MENU_ELEMENT_TYPE_EXIT:
 					SharedApplicationSession.CurrentScreen = APPLICATION_SCREENS_EXIT;
@@ -51,32 +51,32 @@ void handleGameEvents(SDL_KeyboardEvent key) {
 	switch(key.keysym.sym) {
 
 		case SDLK_DOWN:
-			gameSession->cursorY ++;
-			if (gameSession->cursorY > MAXIMUM_Y_COORDINATE) {
-				gameSession->cursorY = 0;
+			gameSession->CursorY ++;
+			if (gameSession->CursorY > MAXIMUM_Y_COORDINATE) {
+				gameSession->CursorY = 0;
 			}
 			break;
 
 		case SDLK_UP:
-			if (gameSession->cursorY == 0) {
-				gameSession->cursorY = MAXIMUM_Y_COORDINATE;
+			if (gameSession->CursorY == 0) {
+				gameSession->CursorY = MAXIMUM_Y_COORDINATE;
 			} else {
-				gameSession->cursorY --;
+				gameSession->CursorY --;
 			}
 			break;
 
 		case SDLK_RIGHT:
-			gameSession->cursorX ++;
-			if (gameSession->cursorX > MAXIMUM_X_COORDINATE) {
-				gameSession->cursorX = 0;
+			gameSession->CursorX ++;
+			if (gameSession->CursorX > MAXIMUM_X_COORDINATE) {
+				gameSession->CursorX = 0;
 			}
 			break;
 
 		case SDLK_LEFT:
-			if (gameSession->cursorX == 0) {
-				gameSession->cursorX = MAXIMUM_X_COORDINATE;
+			if (gameSession->CursorX == 0) {
+				gameSession->CursorX = MAXIMUM_X_COORDINATE;
 			} else {
-				gameSession->cursorX --;
+				gameSession->CursorX --;
 			}
 			break;
 
@@ -89,9 +89,9 @@ void handleGameEvents(SDL_KeyboardEvent key) {
 			break;
 		case SDLK_RETURN:
 			if (isAnyMovementInProgress(gameSession) == 1) {
-				endPlayerMovement(gameSession, gameSession->cursorX, gameSession->cursorY);
+				endPlayerMovement(gameSession, gameSession->CursorX, gameSession->CursorY);
 			} else {
-				beginPlayerMovement(gameSession, gameSession->cursorX, gameSession->cursorY);
+				beginPlayerMovement(gameSession, gameSession->CursorX, gameSession->CursorY);
 			}
 			break;
 	}

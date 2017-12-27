@@ -55,6 +55,9 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
 		int cellY = index / squareNumbers;
 		int cellX = index - (cellY * squareNumbers);
 
+		// get checkers piece by coordinate
+		t_Piece *piece = getPieceByCoordinates(gameSession, cellX, cellY);
+
 		SDL_Rect rect;
 		rect.x = startX + numbersColumnWidth + (cellX * squareSize);
 		rect.y = startY + charactersRowHeight + (cellY * squareSize);
@@ -66,7 +69,7 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
 		SDL_RenderDrawRect(renderer, &(SDL_Rect) {
 			startX,rect.y,numbersColumnWidth,squareSize
 		});
-		
+
 		char textRowNumber[2];
 		sprintf(textRowNumber, "%d", (cellY + 1));
 		drawText(renderer, SansSmall, textRowNumber, COLOR_WHITE,  &(SDL_Rect) {
@@ -78,14 +81,44 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
 		if ((cellY % 2 == 0 && cellX % 2 == 0) || (cellY % 2 != 0 && cellX % 2 != 0))
 			SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 
+		// mandatory take?
+//		if(isAnyMovementInProgress(gameSession)) {
+//			t_Move *currentMovement = gameSession->CurrentMovements.Movement;
+
+		if (gameSession->HasPlayerMandatoryTakes == 1) {
+			int mandatoryTake = checkPieceIsMandatoryTake(gameSession->PlayerMandatoryTakes, piece);
+			if (mandatoryTake == 1)
+				SDL_SetRenderDrawColor(renderer, 76, 153, 0, SDL_ALPHA_OPAQUE); // light green
+		}
+//		}
+
 		SDL_RenderFillRect(renderer, &rect);
 
-		// if the cell has a piece, draw it only if it is not taken
-		t_Piece *piece = getPieceByCoordinates(gameSession, cellX, cellY);
-
-		if (piece != NULL && piece->IsTaken != 1)
+		// draw piece
+		if (piece != NULL)
 			drawPiece(renderer, piece->Pawn.PlayerColor, piece->Pawn.PawnType, rect.x, rect.y, rect.w, rect.h);
 	}
+
+	// if any movement in progress, draw the mandatory takes
+//	if(isAnyMovementInProgress(gameSession)) {
+//		t_Move *movement = gameSession->CurrentMovements.Movement;
+//
+//		if (movement->HasMandatoryTakes == 1) {
+//			t_MandatoryTake *takes = &movement->MandatoryTakes;
+//			while(takes != NULL && takes->Piece != NULL) {
+//				SDL_Rect rectTake;
+//				rectTake.x = startX + numbersColumnWidth + (takes->Piece->X * squareSize);
+//				rectTake.y = startY + charactersRowHeight + (takes->Piece->Y * squareSize);
+//				rectTake.w = squareSize;
+//				rectTake.h = squareSize;
+//
+//				SDL_SetRenderDrawColor(renderer, 76, 153, 0, SDL_ALPHA_OPAQUE); // light green
+//				SDL_RenderFillRect(renderer, &rectTake);
+//
+//				takes = takes->Next;
+//			}
+//		}
+//	}
 
 	// draw table borders
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
@@ -94,13 +127,13 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
 	});
 
 	// draw cursor rectangle
-	int selectionX = startX + (gameSession->cursorX * squareSize) + numbersColumnWidth;
-	int selectionY = startY + (gameSession->cursorY * squareSize) + charactersRowHeight;
+	int selectionX = startX + (gameSession->CursorX * squareSize) + numbersColumnWidth;
+	int selectionY = startY + (gameSession->CursorY * squareSize) + charactersRowHeight;
 
-	if (gameSession->movementInProgress==0)
-		SDL_SetRenderDrawColor(renderer, 255,165,0, SDL_ALPHA_OPAQUE);
+	if (isAnyMovementInProgress(gameSession)==0)
+		SDL_SetRenderDrawColor(renderer, 255,165,0, SDL_ALPHA_OPAQUE); // orange
 	else
-		SDL_SetRenderDrawColor(renderer, 236,39,243, SDL_ALPHA_OPAQUE);
+		SDL_SetRenderDrawColor(renderer, 236,39,243, SDL_ALPHA_OPAQUE); // violet
 
 	SDL_RenderDrawRect(renderer, &(SDL_Rect) {
 		selectionX,selectionY,squareSize,squareSize
@@ -117,7 +150,7 @@ void renderGameMoveMessage(SDL_Renderer* renderer, t_GameSession *gameSession, i
 	int paddingLeft = 10;
 	availableWidth = availableWidth - paddingLeft;
 
-	int textX = areaX + paddingLeft, textY = areaY, textWidth = 0, textHeight = 0, marginTop = 15;
+	int textX = areaX + paddingLeft, textY = areaY, textWidth = 0, textHeight = 0, marginTop = 10;
 	SDL_SetRenderDrawColor(renderer, 67,202,18, SDL_ALPHA_OPAQUE);
 
 	// draw player in turn (in charge for the next move)
@@ -130,9 +163,9 @@ void renderGameMoveMessage(SDL_Renderer* renderer, t_GameSession *gameSession, i
 	});
 
 	// draw info command
-	if (gameSession->movementInProgress==0)
+	if (isAnyMovementInProgress(gameSession)==0)
 		sprintf(textMoveInfo, "Press Enter to select the piece to move. ESC to leave the game.");
-	else if (gameSession->movementInProgress==1)
+	else if (isAnyMovementInProgress(gameSession)==1)
 		sprintf(textMoveInfo, "Press Enter to release the piece or ESC to change selection.");
 
 	textY += textHeight + marginTop;
@@ -142,6 +175,28 @@ void renderGameMoveMessage(SDL_Renderer* renderer, t_GameSession *gameSession, i
 	drawWrappedText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, &(SDL_Rect) {
 		textX, textY, availableWidth, textHeight
 	}, availableWidth);
+
+	// draw some legend info
+	sprintf(textMoveInfo, "Orange rect = no piece selected");
+	textY += textHeight + marginTop * 2;
+	TTF_SizeText(SansSmall,textMoveInfo,&textWidth,&textHeight); // get text size
+	drawText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, &(SDL_Rect) {
+		textX, textY, textWidth, textHeight
+	});
+	
+	sprintf(textMoveInfo, "Violet rect = move in progress");
+	textY += textHeight + marginTop;
+	TTF_SizeText(SansSmall,textMoveInfo,&textWidth,&textHeight); // get text size
+	drawText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, &(SDL_Rect) {
+		textX, textY, textWidth, textHeight
+	});
+	
+	sprintf(textMoveInfo, "Green cell = mandatory take");
+	textY += textHeight + marginTop;
+	TTF_SizeText(SansSmall,textMoveInfo,&textWidth,&textHeight); // get text size
+	drawText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, &(SDL_Rect) {
+		textX, textY, textWidth, textHeight
+	});
 }
 
 /**
