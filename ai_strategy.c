@@ -92,7 +92,7 @@ t_AvailableMovement findBestAvailableMovement(t_GameSession *gameSession) {
 //			int a = 1;
 //		} else {
 //			int b = 1;
-		}
+//		}
 
 		// free mem
 		free(clone);
