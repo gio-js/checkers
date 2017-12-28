@@ -1,6 +1,7 @@
 #include "SDL2/SDL_ttf.h"
 #include "enums.h"
 #include "const.h"
+#include "functions.h"
 
 static SDL_Texture *pawnSimplePieceTextureWhite = NULL;
 static SDL_Texture *pawnKingTextureWhite = NULL;

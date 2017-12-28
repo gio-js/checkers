@@ -4,7 +4,7 @@
 #define CONST_H
 
 // number of menu items
-#define MENU_COUNT 2
+#define MENU_COUNT 3
 
 // screen width
 #define SCREEN_WIDTH 800

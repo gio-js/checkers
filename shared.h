@@ -12,5 +12,6 @@ extern t_ApplicationSession SharedApplicationSession;
 // fonts
 extern TTF_Font *SansSmall;
 extern TTF_Font *SansMedium;
+extern TTF_Font *SansLarge;
 
 #endif

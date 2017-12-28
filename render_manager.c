@@ -3,6 +3,7 @@
 #include "enums.h"
 #include "const.h"
 #include "shared.h"
+#include "functions.h"
 
 // create renderer
 static SDL_Renderer* renderer = NULL;
@@ -27,11 +28,16 @@ void handleMenuEvents(SDL_KeyboardEvent key) {
 			break;
 		case SDLK_RETURN:
 			switch(SharedApplicationSession.ScreenUserSelection) {
-				case MENU_ELEMENT_TYPE_SINGLE_PLAYER_GAME:
+				case MENU_ELEMENT_TYPE_1P_VS_2P:
+				case MENU_ELEMENT_TYPE_1P_VS_CPU:
 					SharedApplicationSession.CurrentScreen = APPLICATION_SCREENS_GAME;
 
+					int presetType = GAME_PRESETS_TYPE_1P_VS_2P;
+					if (SharedApplicationSession.ScreenUserSelection == MENU_ELEMENT_TYPE_1P_VS_CPU)
+						presetType = GAME_PRESETS_TYPE_1P_VS_CPU;
+
 					// re-initialize game session
-					initializeGameSession(GAME_PRESETS_TYPE_DEFAULT);
+					initializeGameSession(presetType);
 					break;
 				case MENU_ELEMENT_TYPE_EXIT:
 					SharedApplicationSession.CurrentScreen = APPLICATION_SCREENS_EXIT;
@@ -46,40 +52,52 @@ void handleMenuEvents(SDL_KeyboardEvent key) {
  */
 void handleGameEvents(SDL_KeyboardEvent key) {
 	t_GameSession *gameSession = &SharedApplicationSession.CurrentGameSession;
+	int gameEnded = 0;
+
+	if (gameSession->PlayerVictory != NULL) {
+		gameEnded = 1;
+	}
 
 	// handle key event
 	switch(key.keysym.sym) {
 
 		case SDLK_DOWN:
-			gameSession->CursorY ++;
-			if (gameSession->CursorY > MAXIMUM_Y_COORDINATE) {
-				gameSession->CursorY = 0;
+			if (gameEnded == 0) {
+				gameSession->CursorY ++;
+				if (gameSession->CursorY > MAXIMUM_Y_COORDINATE) {
+					gameSession->CursorY = 0;
+				}
 			}
 			break;
 
 		case SDLK_UP:
-			if (gameSession->CursorY == 0) {
-				gameSession->CursorY = MAXIMUM_Y_COORDINATE;
-			} else {
-				gameSession->CursorY --;
+			if (gameEnded == 0) {
+				if (gameSession->CursorY == 0) {
+					gameSession->CursorY = MAXIMUM_Y_COORDINATE;
+				} else {
+					gameSession->CursorY --;
+				}
 			}
 			break;
 
 		case SDLK_RIGHT:
-			gameSession->CursorX ++;
-			if (gameSession->CursorX > MAXIMUM_X_COORDINATE) {
-				gameSession->CursorX = 0;
+			if (gameEnded == 0) {
+				gameSession->CursorX ++;
+				if (gameSession->CursorX > MAXIMUM_X_COORDINATE) {
+					gameSession->CursorX = 0;
+				}
 			}
 			break;
 
 		case SDLK_LEFT:
-			if (gameSession->CursorX == 0) {
-				gameSession->CursorX = MAXIMUM_X_COORDINATE;
-			} else {
-				gameSession->CursorX --;
+			if (gameEnded == 0) {
+				if (gameSession->CursorX == 0) {
+					gameSession->CursorX = MAXIMUM_X_COORDINATE;
+				} else {
+					gameSession->CursorX --;
+				}
 			}
 			break;
-
 		case SDLK_ESCAPE:
 			if (isAnyMovementInProgress(gameSession) == 1) {
 				undoBeginPlayerMovement(gameSession);
@@ -176,8 +194,9 @@ void renderScene() {
 	if (SDL_Init(SDL_INIT_VIDEO) == 0 && TTF_Init() != -1 && IMG_Init(IMG_INIT_PNG) != -1) {
 
 		// create shared font
-		SansMedium = TTF_OpenFont("OpenSans-Light.ttf", 20);
 		SansSmall = TTF_OpenFont("OpenSans-Light.ttf", 14);
+		SansMedium = TTF_OpenFont("OpenSans-Light.ttf", 20);
+		SansLarge = TTF_OpenFont("OpenSans-Light.ttf", 30);
 
 		// create window
 		SDL_Window* window = NULL;
@@ -229,33 +248,3 @@ void renderScene() {
 	IMG_Quit();
 	SDL_Quit();
 }
-
-//void putpixel(SDL_Surface *theScreen, int x, int y, Uint32 pixel) {
-//	int byteperpixel = theScreen->format->BytesPerPixel;
-//
-//	Uint8 *p = (Uint8*)theScreen->pixels + y * theScreen->pitch + x * byteperpixel;
-//
-//	// Adress to pixel
-//	*(Uint32 *)p = pixel;
-//}
-////nerifrån uppåt (SW)
-//void drawLine(SDL_Surface *Screen, int x0, int y0, int x1, int y1, Uint32 pixel) {
-//
-//	int i;
-//	double x = x1 - x0;
-//	double y = y1 - y0;
-//	double length = (double)sqrt( x*x + y*y );
-//	double addx = x / length;
-//	double addy = y / length;
-//	x = x0;
-//	y = y0;
-//
-//	for ( i = 0; i < length; i += 1) {
-//		putpixel(Screen, x, y, pixel );
-//		x += addx;
-//		y += addy;
-//
-//	}
-//}
-
-

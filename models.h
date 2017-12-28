@@ -37,6 +37,8 @@ typedef struct Piece {
  */
 typedef struct PieceMandatoryTake {
 	t_Piece *Piece; // the piece to take
+	int DestinationX; // movement destination x coordinate in order to the the piece
+	int DestinationY; // movement destination y coordinate in order to the the piece
 	struct PieceMandatoryTake *Next;
 } t_PieceMandatoryTake;
 
@@ -73,10 +75,20 @@ typedef struct MoveStory {
 } t_MoveStory;
 
 /*
+ * Defines a list of available movements for the specified cell
+ */
+typedef struct AvailableMovement {
+	t_Piece *Piece; // the piece that can be moved
+	int DestinationX; // x coordinate where the specified piece can be placed
+	int DestinationY; // y coordinate where the specified piece can be placed
+	struct AvailableMovement* Next; // next available movement
+} t_AvailableMovement;
+
+/*
  * Defines a list of piece momement used fot IA algorithm
  */
 typedef struct GameSession {
-	t_Piece Pieces[TABLE_PIECE_NUMBERS]; // all the available players
+	t_Piece Pieces[TABLE_PIECE_NUMBERS]; // all the available pieces
 	t_Player FirstPlayer;
 	t_Player SecondPlayer;
 	t_MoveStory *Movements;
@@ -87,6 +99,8 @@ typedef struct GameSession {
 	t_MoveStory CurrentMovements;
 	t_PlayerMandatoryTake PlayerMandatoryTakes; // the list containing the mandatory adiacent pieces the the moving pawn must take (a single one among the list)
 	int HasPlayerMandatoryTakes; // a flag that indicate whether the player has any mandatory movement in order to take some opponent pieces
+	t_Player *PlayerVictory; // the player who won the match
+	int CPU_UnableToContinue; // The flag reaches the 1 value in case the CPU is unable to find any valid movement in order to continue the match
 } t_GameSession;
 
 

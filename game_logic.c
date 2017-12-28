@@ -1,6 +1,7 @@
 #include "models.h"
 #include "const.h"
 #include "enums.h"
+#include "functions.h"
 
 /**
  * Checks for if the movement transform the piece in a king
@@ -17,11 +18,13 @@ t_Piece* getPieceByCoordinates(t_GameSession *gameSession, int x, int y) {
 }
 
 /**
- * Checks for if the movement transform the piece in a king
+ * Retrieves the diagonal offset (1, -1: used to do a movement) in a 2D array for the specified piece
  */
-t_PieceMandatoryTake getPieceMandatoryTakes(t_GameSession *gameSession, t_Piece *currentPiece) {
+int** getValidPieceDiagonalOffset(t_Piece *piece) {
 	int i = 0, j = 0;
-	int adiacentDiagonalCells[2][4];
+	int **adiacentDiagonalCells = (int **) malloc(sizeof(int*) * 2 );
+	adiacentDiagonalCells[0] = (int* ) malloc( sizeof(int)*4 );
+	adiacentDiagonalCells[1] = (int* ) malloc( sizeof(int)*4 );
 
 	// initialize array
 	for(i = 0; i < 2; i++)
@@ -29,9 +32,9 @@ t_PieceMandatoryTake getPieceMandatoryTakes(t_GameSession *gameSession, t_Piece 
 			adiacentDiagonalCells[i][j] = 0;
 
 	// (simple piece) black only up direction
-	if (currentPiece->Pawn.PawnType == PAWN_TYPE_KING || (
-	            currentPiece->Pawn.PawnType == PAWN_TYPE_SIMPLE_PIECE &&
-	            currentPiece->Pawn.PlayerColor == PLAYER_COLOR_WHITE
+	if (piece->Pawn.PawnType == PAWN_TYPE_KING || (
+	            piece->Pawn.PawnType == PAWN_TYPE_SIMPLE_PIECE &&
+	            piece->Pawn.PlayerColor == PLAYER_COLOR_WHITE
 	        )) {
 		adiacentDiagonalCells[0][0] = -1; // x
 		adiacentDiagonalCells[0][1] = 1; // y
@@ -40,9 +43,9 @@ t_PieceMandatoryTake getPieceMandatoryTakes(t_GameSession *gameSession, t_Piece 
 	}
 
 	// (simple piece) white only down direction
-	if (currentPiece->Pawn.PawnType == PAWN_TYPE_KING || (
-	            currentPiece->Pawn.PawnType == PAWN_TYPE_SIMPLE_PIECE &&
-	            currentPiece->Pawn.PlayerColor == PLAYER_COLOR_BLACK
+	if (piece->Pawn.PawnType == PAWN_TYPE_KING || (
+	            piece->Pawn.PawnType == PAWN_TYPE_SIMPLE_PIECE &&
+	            piece->Pawn.PlayerColor == PLAYER_COLOR_BLACK
 	        )) {
 		adiacentDiagonalCells[1][0] = -1; // x
 		adiacentDiagonalCells[1][1] = -1; // y
@@ -50,6 +53,16 @@ t_PieceMandatoryTake getPieceMandatoryTakes(t_GameSession *gameSession, t_Piece 
 		adiacentDiagonalCells[1][3] = -1; // y
 	}
 
+	return adiacentDiagonalCells;
+}
+
+/**
+ * Checks for if the movement transform the piece in a king
+ */
+t_PieceMandatoryTake getPieceMandatoryTakes(t_GameSession *gameSession, t_Piece *currentPiece) {
+	int i = 0, j = 0;
+
+	int** adiacentDiagonalCells = getValidPieceDiagonalOffset(currentPiece);
 	t_PieceMandatoryTake mandatoryTake;
 	mandatoryTake.Piece = NULL;
 	mandatoryTake.Next = NULL;
@@ -100,6 +113,8 @@ t_PieceMandatoryTake getPieceMandatoryTakes(t_GameSession *gameSession, t_Piece 
 					}
 
 					mandatoryTake.Piece = diagonalPiece;
+					mandatoryTake.DestinationX = afterDiagonalPieceX;
+					mandatoryTake.DestinationY = afterDiagonalPieceY;
 				}
 
 			}
@@ -116,6 +131,8 @@ t_PlayerMandatoryTake getPlayerMandatoryTakes(t_GameSession *gameSession, t_Play
 	t_PlayerMandatoryTake playerTakes;
 	playerTakes.ReferredPiece = NULL;
 	playerTakes.MandatoryTakes.Piece = NULL;
+	playerTakes.MandatoryTakes.DestinationX = -1;
+	playerTakes.MandatoryTakes.DestinationY = -1;
 	playerTakes.MandatoryTakes.Next = NULL;
 	playerTakes.Next = NULL;
 
@@ -359,9 +376,9 @@ void beginPlayerMovement(t_GameSession *gameSession, int x, int y) {
 
 /**
  * End player movement
+ * Returns the movement score
  */
-void endPlayerMovement(t_GameSession *gameSession, int xTo, int yTo) {
-
+int endPlayerMovement(t_GameSession *gameSession, int xTo, int yTo) {
 	t_Move *movement = gameSession->CurrentMovements.Movement;
 	movement->Xto = xTo;
 	movement->Yto = yTo;
@@ -446,5 +463,190 @@ void endPlayerMovement(t_GameSession *gameSession, int xTo, int yTo) {
 	if (gameSession->PlayerMandatoryTakes.ReferredPiece != NULL)
 		gameSession->HasPlayerMandatoryTakes = 1;
 
+	// in case one of the player eat all the opponents' pieces won the game
+	int indexPiece = 0, pieceLost = 0, pieceTaken = 0;
+	for (indexPiece = 0; indexPiece < TABLE_PIECE_NUMBERS; indexPiece++) {
+		t_Piece piece = gameSession->Pieces[indexPiece];
+		if (piece.Player == gameSession->PlayerInTurn)
+			pieceLost += (piece.IsTaken == 1 ? 1 : 0);
+		else
+			pieceTaken += (piece.IsTaken == 1 ? 1 : 0);
+	}
+	if (pieceTaken == PLAYER_PIECE_NUMBERS)
+		gameSession->PlayerVictory = gameSession->PlayerInTurn;
+	else if (pieceLost == PLAYER_PIECE_NUMBERS)
+		gameSession->PlayerVictory = (gameSession->PlayerInTurn == &gameSession->FirstPlayer ? &gameSession->SecondPlayer : &gameSession->FirstPlayer);
+
+	return score;
+}
+
+/**
+ * Retrieves the list of all the available movements for the specified piece
+ */
+t_AvailableMovement getPieceAvailableMovements(t_GameSession *gameSession, t_Piece *piece) {
+	t_AvailableMovement availableMovements;
+	availableMovements.Next = NULL;
+	availableMovements.Piece = NULL;
+	availableMovements.DestinationX = -1;
+	availableMovements.DestinationY = -1;
+	int** adiacentDiagonalCells = getValidPieceDiagonalOffset(piece);
+
+	int i = 0, j = 0;
+	for(i = 0; i < 2; i++) {
+		for(j = 0; j < 4; j+=2) {
+			int diagonalX = adiacentDiagonalCells[i][j];
+			int diagonalY = adiacentDiagonalCells[i][j+1];
+
+			// diagonal not set
+			if (diagonalX == 0 || diagonalY == 0)
+				continue;
+
+			int diagonalPieceX = diagonalX + piece->X;
+			int diagonalPieceY = diagonalY + piece->Y;
+
+			// check bounds
+			if (diagonalPieceX < 0 || diagonalPieceY < 0)
+				continue;
+
+			if (diagonalPieceX > MAXIMUM_X_COORDINATE || diagonalPieceY > MAXIMUM_Y_COORDINATE)
+				continue;
+
+			// get diagonal piece
+			t_Piece *diagonalPiece = getPieceByCoordinates(gameSession, diagonalPieceX, diagonalPieceY);
+
+			// the cell is empty, specify piece is allowed to move in
+			if (diagonalPiece == NULL) {
+				if (availableMovements.Piece != NULL) {
+					t_AvailableMovement* lastAvailableMovement = (t_AvailableMovement*)malloc(sizeof(t_AvailableMovement));
+					(*lastAvailableMovement) = availableMovements;
+					availableMovements.Next = lastAvailableMovement;
+				}
+
+				availableMovements.Piece = piece;
+				availableMovements.DestinationX = diagonalPieceX;
+				availableMovements.DestinationY = diagonalPieceY;
+			}
+		}
+	}
+
+	return availableMovements;
+}
+
+/**
+ * Retrieves the list of all the available movements for the current game session and the specified player
+ */
+t_AvailableMovement getAvailableMovements(t_GameSession *gameSession, t_Player *player) {
+	t_AvailableMovement availableMovements;
+	availableMovements.Next = NULL;
+	availableMovements.Piece = NULL;
+	availableMovements.DestinationX = -1;
+	availableMovements.DestinationY = -1;
+
+	// check for mandatory movements, if any, they are all the available movments for the player
+	t_PlayerMandatoryTake mandatoryTakes = getPlayerMandatoryTakes(gameSession, player);
+	int hasMandatoryTakes = 0;
+
+	while(mandatoryTakes.ReferredPiece != NULL) {
+
+		t_PieceMandatoryTake mandatoryTakesCoordinates = mandatoryTakes.MandatoryTakes;
+
+		while(mandatoryTakesCoordinates.Piece != NULL) {
+
+			if (availableMovements.Piece != NULL) {
+				t_AvailableMovement* lastAvailableMovement = (t_AvailableMovement*)malloc(sizeof(t_AvailableMovement));
+				(*lastAvailableMovement) = availableMovements;
+				availableMovements.Next = lastAvailableMovement;
+			}
+
+			availableMovements.Piece = mandatoryTakes.ReferredPiece;
+			availableMovements.DestinationX = mandatoryTakesCoordinates.DestinationX;
+			availableMovements.DestinationY = mandatoryTakesCoordinates.DestinationY;
+
+			if (mandatoryTakesCoordinates.Next == NULL)
+				break;
+
+			mandatoryTakesCoordinates = *mandatoryTakesCoordinates.Next;
+		}
+
+		mandatoryTakes = *mandatoryTakes.Next;
+		hasMandatoryTakes = 1;
+	}
+
+	if (hasMandatoryTakes == 1)
+		return availableMovements;
+
+	// otherwise for each player piece, check the available movements
+	int index = 0;
+	for(index = 0; index < TABLE_PIECE_NUMBERS; index++) {
+		t_Piece *refPiece = &gameSession->Pieces[index];
+
+		t_AvailableMovement pieceAvailableMovements = getPieceAvailableMovements(gameSession, refPiece);
+		while(pieceAvailableMovements.Piece != NULL) {
+
+			if (availableMovements.Piece != NULL) {
+				t_AvailableMovement* lastAvailableMovement = (t_AvailableMovement*)malloc(sizeof(t_AvailableMovement));
+				(*lastAvailableMovement) = availableMovements;
+				availableMovements.Next = lastAvailableMovement;
+			}
+
+			availableMovements.Piece = pieceAvailableMovements.Piece;
+			availableMovements.DestinationX = pieceAvailableMovements.DestinationX;
+			availableMovements.DestinationY = pieceAvailableMovements.DestinationY;
+
+			// next
+			if (pieceAvailableMovements.Next == NULL)
+				break;
+
+			pieceAvailableMovements = *pieceAvailableMovements.Next;
+		}
+	}
+
+	return availableMovements;
+}
+
+
+/**
+ * Creates a clone of the specified game session
+ */
+t_GameSession *cloneGameSession(t_GameSession *gameSession) {
+	t_GameSession *clone = (t_GameSession*)malloc(sizeof(t_GameSession));
+
+	// players
+	clone->FirstPlayer = gameSession->FirstPlayer;
+	clone->SecondPlayer = gameSession->SecondPlayer;
+
+	if (gameSession->PlayerInTurn == &gameSession->FirstPlayer)
+		clone->PlayerInTurn = &clone->FirstPlayer;
+	else
+		clone->PlayerInTurn = &clone->SecondPlayer;
+
+	// pieces
+	int index = 0;
+	for (index = 0; index < TABLE_PIECE_NUMBERS; index++) {
+		clone->Pieces[index].IsTaken = gameSession->Pieces[index].IsTaken;
+		clone->Pieces[index].Pawn = gameSession->Pieces[index].Pawn;
+		clone->Pieces[index].X = gameSession->Pieces[index].X;
+
+		if (gameSession->Pieces[index].Player == &gameSession->FirstPlayer)
+			clone->Pieces[index].Player = &clone->FirstPlayer;
+		else
+			clone->Pieces[index].Player = &clone->SecondPlayer;
+
+	}
+
+	clone->Movements->Movement = NULL;
+	clone->Movements->PreviousMovement = NULL;
+	clone->CursorX = gameSession->CursorX;
+	clone->CursorY = gameSession->CursorY;
+	clone->MovementInProgress = gameSession->MovementInProgress;
+	clone->CurrentMovements.Movement = NULL;
+	clone->CurrentMovements.PreviousMovement = NULL;
+	clone->PlayerMandatoryTakes.Next = NULL;
+	clone->PlayerMandatoryTakes.ReferredPiece = NULL;
+	clone->PlayerMandatoryTakes.MandatoryTakes.Next = NULL;
+	clone->PlayerMandatoryTakes.MandatoryTakes.Piece = NULL;
+	clone->HasPlayerMandatoryTakes = 0;
+
+	return clone;
 
 }

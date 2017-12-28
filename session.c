@@ -7,13 +7,7 @@
  * Initialize the game session
  */
 void initializeGameSession(int gamePresetsType) {
-	SharedApplicationSession.CurrentGameSession.FirstPlayer = (t_Player) {
-		"Player1", PLAYER_TYPE_HUMAN, PLAYER_COLOR_WHITE
-	};
 
-	SharedApplicationSession.CurrentGameSession.SecondPlayer = (t_Player) {
-		"Computer", PLAYER_TYPE_COMPUTER, PLAYER_COLOR_BLACK
-	};
 	//gameSession.Movements = NULL;
 	SharedApplicationSession.CurrentGameSession.MovementInProgress = 0;
 	SharedApplicationSession.CurrentGameSession.CursorX = 0;
@@ -24,10 +18,25 @@ void initializeGameSession(int gamePresetsType) {
 	SharedApplicationSession.CurrentGameSession.PlayerMandatoryTakes.MandatoryTakes.Next = NULL;
 	SharedApplicationSession.CurrentGameSession.PlayerMandatoryTakes.Next = NULL;
 	SharedApplicationSession.CurrentGameSession.HasPlayerMandatoryTakes = 0;
-	SharedApplicationSession.CurrentGameSession.PlayerInTurn = &(SharedApplicationSession.CurrentGameSession.FirstPlayer);
 
 	// players pieces (default preset initial game)
-	if (gamePresetsType == GAME_PRESETS_TYPE_DEFAULT) {
+	if (gamePresetsType == GAME_PRESETS_TYPE_1P_VS_2P ||
+	        gamePresetsType == GAME_PRESETS_TYPE_1P_VS_CPU) {
+
+		SharedApplicationSession.CurrentGameSession.FirstPlayer = (t_Player) {
+			"Player 1", PLAYER_TYPE_HUMAN, PLAYER_COLOR_WHITE
+		};
+
+		if (gamePresetsType == GAME_PRESETS_TYPE_1P_VS_CPU) {
+			SharedApplicationSession.CurrentGameSession.SecondPlayer = (t_Player) {
+				"Computer", PLAYER_TYPE_COMPUTER, PLAYER_COLOR_BLACK
+			};
+		} else {
+			SharedApplicationSession.CurrentGameSession.SecondPlayer = (t_Player) {
+				"Player 2", PLAYER_TYPE_HUMAN, PLAYER_COLOR_BLACK
+			};
+		}
+
 		int index = 0;
 		int cellPerRow = 4, cellXIndex = 0;
 		for(index = 0; index < PLAYER_PIECE_NUMBERS; index++) {
@@ -95,12 +104,16 @@ void initializeGameSession(int gamePresetsType) {
 		SharedApplicationSession.CurrentGameSession.Pieces[2] = p3Piece;
 	}
 
+	// first movement assigned to first player
+	SharedApplicationSession.CurrentGameSession.PlayerInTurn = &(SharedApplicationSession.CurrentGameSession.FirstPlayer);
+	SharedApplicationSession.CurrentGameSession.PlayerVictory = NULL;
+
 }
 
 /**
  * Generates a new local game session
  */
 void initializeSharedSession() {
-	SharedApplicationSession.ScreenUserSelection = MENU_ELEMENT_TYPE_SINGLE_PLAYER_GAME;
+	SharedApplicationSession.ScreenUserSelection = MENU_ELEMENT_TYPE_1P_VS_2P;
 	SharedApplicationSession.CurrentScreen = APPLICATION_SCREENS_MENU;
 }

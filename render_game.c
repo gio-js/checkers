@@ -2,6 +2,7 @@
 #include "const.h"
 #include "models.h"
 #include "shared.h"
+#include "functions.h"
 
 /**
  * Render the checkers matrix (on the left side of the screen)
@@ -16,6 +17,15 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
 	const char * horizontalChars[] = {
 		"A", "B", "C", "D", "E", "F", "G", "H"
 	};
+	int isCurrentPlayerCPU = 0, gameEnded = 0;
+
+	if (gameSession->PlayerInTurn->PlayerType == PLAYER_TYPE_COMPUTER) {
+		isCurrentPlayerCPU = 1;
+	}
+
+	if (gameSession->PlayerVictory != NULL) {
+		gameEnded = 1;
+	}
 
 	if (availableWidth > availableHeight) {
 		squareSize = (availableWidth - (padding * 2) - numbersColumnWidth) / squareNumbers;
@@ -44,7 +54,7 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
 
 		// draw column character
 		int charTextWidth = 9;
-		drawText(renderer, SansSmall, horizontalChars[index], COLOR_WHITE,  &(SDL_Rect) {
+		drawText(renderer, SansSmall, horizontalChars[index], COLOR_WHITE,  (SDL_Rect) {
 			rect.x+(squareSize/2)-4,startY+3,charTextWidth,20
 		});
 	}
@@ -72,7 +82,7 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
 
 		char textRowNumber[2];
 		sprintf(textRowNumber, "%d", (cellY + 1));
-		drawText(renderer, SansSmall, textRowNumber, COLOR_WHITE,  &(SDL_Rect) {
+		drawText(renderer, SansSmall, textRowNumber, COLOR_WHITE,  (SDL_Rect) {
 			startX+8,rect.y+(squareSize/2)-10,9,20
 		});
 
@@ -82,15 +92,11 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
 			SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 
 		// mandatory take?
-//		if(isAnyMovementInProgress(gameSession)) {
-//			t_Move *currentMovement = gameSession->CurrentMovements.Movement;
-
 		if (gameSession->HasPlayerMandatoryTakes == 1) {
-			int mandatoryTake = checkPieceIsMandatoryTake(gameSession->PlayerMandatoryTakes, piece);
+			int mandatoryTake = checkPieceIsMandatoryTake(&gameSession->PlayerMandatoryTakes, piece);
 			if (mandatoryTake == 1)
 				SDL_SetRenderDrawColor(renderer, 76, 153, 0, SDL_ALPHA_OPAQUE); // light green
 		}
-//		}
 
 		SDL_RenderFillRect(renderer, &rect);
 
@@ -99,27 +105,6 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
 			drawPiece(renderer, piece->Pawn.PlayerColor, piece->Pawn.PawnType, rect.x, rect.y, rect.w, rect.h);
 	}
 
-	// if any movement in progress, draw the mandatory takes
-//	if(isAnyMovementInProgress(gameSession)) {
-//		t_Move *movement = gameSession->CurrentMovements.Movement;
-//
-//		if (movement->HasMandatoryTakes == 1) {
-//			t_MandatoryTake *takes = &movement->MandatoryTakes;
-//			while(takes != NULL && takes->Piece != NULL) {
-//				SDL_Rect rectTake;
-//				rectTake.x = startX + numbersColumnWidth + (takes->Piece->X * squareSize);
-//				rectTake.y = startY + charactersRowHeight + (takes->Piece->Y * squareSize);
-//				rectTake.w = squareSize;
-//				rectTake.h = squareSize;
-//
-//				SDL_SetRenderDrawColor(renderer, 76, 153, 0, SDL_ALPHA_OPAQUE); // light green
-//				SDL_RenderFillRect(renderer, &rectTake);
-//
-//				takes = takes->Next;
-//			}
-//		}
-//	}
-
 	// draw table borders
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 	SDL_RenderDrawRect(renderer, &(SDL_Rect) {
@@ -127,20 +112,47 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
 	});
 
 	// draw cursor rectangle
-	int selectionX = startX + (gameSession->CursorX * squareSize) + numbersColumnWidth;
-	int selectionY = startY + (gameSession->CursorY * squareSize) + charactersRowHeight;
+	if (isCurrentPlayerCPU == 0 && gameEnded == 0) {
+		int selectionX = startX + (gameSession->CursorX * squareSize) + numbersColumnWidth;
+		int selectionY = startY + (gameSession->CursorY * squareSize) + charactersRowHeight;
 
-	if (isAnyMovementInProgress(gameSession)==0)
-		SDL_SetRenderDrawColor(renderer, 255,165,0, SDL_ALPHA_OPAQUE); // orange
-	else
+		if (isAnyMovementInProgress(gameSession)==0)
+			SDL_SetRenderDrawColor(renderer, 255,165,0, SDL_ALPHA_OPAQUE); // orange
+		else
+			SDL_SetRenderDrawColor(renderer, 236,39,243, SDL_ALPHA_OPAQUE); // violet
+
+		SDL_RenderDrawRect(renderer, &(SDL_Rect) {
+			selectionX,selectionY,squareSize,squareSize
+		});
+		SDL_RenderDrawRect(renderer, &(SDL_Rect) {
+			selectionX+2,selectionY+2,squareSize-4,squareSize-4
+		});
+	}
+
+	// draw player victory rectangle
+	if (gameEnded == 1) {
+		char textWinnerPlayer[100];
+		int winnerRectWidthPerc = 60;
+		int winnerRectHeightPerc = 40;
+		int winnerRectWidth = availableWidth * ((float)winnerRectWidthPerc / 100.0);
+		int winnerRectHeight = availableHeight * ((float)winnerRectHeightPerc / 100.0);
+		int winnerRectX = (availableWidth - winnerRectWidth)/2;
+		int winnerRectY = (availableHeight - winnerRectHeight)/2;
+		int textWinnerWidth = 0, textWinnerHeight = 0;
+
 		SDL_SetRenderDrawColor(renderer, 236,39,243, SDL_ALPHA_OPAQUE); // violet
+		SDL_RenderFillRect(renderer, &(SDL_Rect) {
+			winnerRectX, winnerRectY,winnerRectWidth,winnerRectHeight
+		});
 
-	SDL_RenderDrawRect(renderer, &(SDL_Rect) {
-		selectionX,selectionY,squareSize,squareSize
-	});
-	SDL_RenderDrawRect(renderer, &(SDL_Rect) {
-		selectionX+2,selectionY+2,squareSize-4,squareSize-4
-	});
+		sprintf(textWinnerPlayer, "%s won the match", gameSession->PlayerVictory->PlayerName);
+		TTF_SizeText(SansLarge,textWinnerPlayer,&textWinnerWidth,&textWinnerHeight); // get text size
+		drawText(renderer, SansSmall, textWinnerPlayer, COLOR_WHITE, (SDL_Rect) {
+			winnerRectX + ((winnerRectWidth - textWinnerWidth) / 2),
+			            winnerRectY + ((winnerRectHeight - textWinnerHeight) / 2),
+			            textWinnerWidth, textWinnerHeight
+		});
+	}
 }
 
 /**
@@ -158,7 +170,7 @@ void renderGameMoveMessage(SDL_Renderer* renderer, t_GameSession *gameSession, i
 	sprintf(textMoveInfo, "Player in turn: %s", gameSession->PlayerInTurn->PlayerName);
 
 	TTF_SizeText(SansSmall,textMoveInfo,&textWidth,&textHeight); // get text size
-	drawText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, &(SDL_Rect) {
+	drawText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, (SDL_Rect) {
 		textX, textY, textWidth, textHeight
 	});
 
@@ -172,7 +184,7 @@ void renderGameMoveMessage(SDL_Renderer* renderer, t_GameSession *gameSession, i
 	TTF_SizeText(SansSmall, textMoveInfo, &textWidth, &textHeight); // get text size
 
 	textHeight = 5 + textHeight + (textHeight * (textWidth / availableWidth));
-	drawWrappedText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, &(SDL_Rect) {
+	drawWrappedText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, (SDL_Rect) {
 		textX, textY, availableWidth, textHeight
 	}, availableWidth);
 
@@ -180,21 +192,21 @@ void renderGameMoveMessage(SDL_Renderer* renderer, t_GameSession *gameSession, i
 	sprintf(textMoveInfo, "Orange rect = no piece selected");
 	textY += textHeight + marginTop * 2;
 	TTF_SizeText(SansSmall,textMoveInfo,&textWidth,&textHeight); // get text size
-	drawText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, &(SDL_Rect) {
+	drawText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, (SDL_Rect) {
 		textX, textY, textWidth, textHeight
 	});
-	
+
 	sprintf(textMoveInfo, "Violet rect = move in progress");
 	textY += textHeight + marginTop;
 	TTF_SizeText(SansSmall,textMoveInfo,&textWidth,&textHeight); // get text size
-	drawText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, &(SDL_Rect) {
+	drawText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, (SDL_Rect) {
 		textX, textY, textWidth, textHeight
 	});
-	
+
 	sprintf(textMoveInfo, "Green cell = mandatory take");
 	textY += textHeight + marginTop;
 	TTF_SizeText(SansSmall,textMoveInfo,&textWidth,&textHeight); // get text size
-	drawText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, &(SDL_Rect) {
+	drawText(renderer, SansSmall, textMoveInfo, COLOR_WHITE, (SDL_Rect) {
 		textX, textY, textWidth, textHeight
 	});
 }
@@ -223,7 +235,7 @@ void renderPlayerInfo(SDL_Renderer* renderer, t_GameSession *gameSession, t_Play
 	sprintf(textPlayerName, "Player: %s (%s)", player->PlayerName, player->PlayerColor == PLAYER_COLOR_BLACK ? "BLACK" : "WHITE");
 	textY = areaY;
 	TTF_SizeText(SansSmall,textPlayerName,&textWidth,&textHeight); // get text size
-	drawText(renderer, SansSmall, textPlayerName, COLOR_WHITE, &(SDL_Rect) {
+	drawText(renderer, SansSmall, textPlayerName, COLOR_WHITE, (SDL_Rect) {
 		textX, textY, textWidth, textHeight
 	});
 
@@ -232,7 +244,7 @@ void renderPlayerInfo(SDL_Renderer* renderer, t_GameSession *gameSession, t_Play
 	sprintf(textPieceLost, "Pieces lost: %d", pieceLost);
 	textY += textHeight + marginTop;
 	TTF_SizeText(SansSmall,textPieceLost,&textWidth,&textHeight); // get text size
-	drawText(renderer, SansSmall, textPieceLost, COLOR_WHITE, &(SDL_Rect) {
+	drawText(renderer, SansSmall, textPieceLost, COLOR_WHITE, (SDL_Rect) {
 		textX, textY, textWidth, textHeight
 	});
 
@@ -241,7 +253,7 @@ void renderPlayerInfo(SDL_Renderer* renderer, t_GameSession *gameSession, t_Play
 	sprintf(textPieceTaken, "Pieces taken: %d", pieceTaken);
 	textY += textHeight + marginTop;
 	TTF_SizeText(SansSmall,textPieceTaken,&textWidth,&textHeight); // get text size
-	drawText(renderer, SansSmall, textPieceTaken, COLOR_WHITE, &(SDL_Rect) {
+	drawText(renderer, SansSmall, textPieceTaken, COLOR_WHITE, (SDL_Rect) {
 		textX, textY, textWidth, textHeight
 	});
 
@@ -250,7 +262,7 @@ void renderPlayerInfo(SDL_Renderer* renderer, t_GameSession *gameSession, t_Play
 	sprintf(textPieceInGame, "Pieces in game: %d", pieceInGame);
 	textY += textHeight + marginTop;
 	TTF_SizeText(SansSmall,textPieceInGame,&textWidth,&textHeight); // get text size
-	drawText(renderer, SansSmall, textPieceInGame, COLOR_WHITE, &(SDL_Rect) {
+	drawText(renderer, SansSmall, textPieceInGame, COLOR_WHITE, (SDL_Rect) {
 		textX, textY, textWidth, textHeight
 	});
 
@@ -280,6 +292,16 @@ void renderGame(SDL_Renderer* renderer, t_GameSession *gameSession) {
 
 	// render the current game informations
 	renderGameInfo(renderer, gameSession, checkersGameWidth, gameInfoWidth, SCREEN_HEIGHT);
+
+	if (gameSession->PlayerInTurn->PlayerType == PLAYER_TYPE_COMPUTER) {
+		int result = makeMovementByCPU(gameSession);
+
+		if (result == 0) {
+			gameSession->CPU_UnableToContinue = 1;
+			gameSession->PlayerVictory = (gameSession->PlayerInTurn == &gameSession->FirstPlayer ?
+			                              &gameSession->SecondPlayer : &gameSession->FirstPlayer);
+		}
+	}
 
 }
 

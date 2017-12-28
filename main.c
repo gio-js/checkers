@@ -1,8 +1,9 @@
+#include "functions.h"
+
 /**
  * main
  */
-int main(int argc, char** argv) {
-
+int WinMain(int argc, char** argv) {
 	// initialize shared session
 	initializeSharedSession();
 
@@ -10,5 +11,4 @@ int main(int argc, char** argv) {
 	renderScene();
 
 	return 0;
-
 }
