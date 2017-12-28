@@ -132,7 +132,7 @@ void renderGameCheckers(SDL_Renderer* renderer, t_GameSession *gameSession, int 
 	// draw player victory rectangle
 	if (gameEnded == 1) {
 		char textWinnerPlayer[100];
-		int winnerRectWidthPerc = 60;
+		int winnerRectWidthPerc = 80;
 		int winnerRectHeightPerc = 40;
 		int winnerRectWidth = availableWidth * ((float)winnerRectWidthPerc / 100.0);
 		int winnerRectHeight = availableHeight * ((float)winnerRectHeightPerc / 100.0);

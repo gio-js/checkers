@@ -49,7 +49,7 @@ int analyzeMovementPath(t_GameSession *clone, t_AvailableMovement movement, int 
 //		}
 
 		// free mem
-		free(innerClone);
+		freeGameSessionClone(innerClone);
 
 		// next
 		if (currentPathAvailableMovements.Next == NULL)
@@ -65,7 +65,7 @@ int analyzeMovementPath(t_GameSession *clone, t_AvailableMovement movement, int 
  * Retrieves the best movement for the computer player
  */
 t_AvailableMovement findBestAvailableMovement(t_GameSession *gameSession) {
-	srand(time(NULL));
+//	srand(time(NULL));
 	int bestScore = -99999;
 	t_AvailableMovement bestMovement;
 	memset(&bestMovement, 0, sizeof bestMovement);
@@ -95,7 +95,7 @@ t_AvailableMovement findBestAvailableMovement(t_GameSession *gameSession) {
 //		}
 
 		// free mem
-		free(clone);
+		freeGameSessionClone(clone);
 
 		if (bestScore == -99999 || movementScore > bestScore) {
 			bestScore = movementScore;

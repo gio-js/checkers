@@ -684,3 +684,12 @@ t_GameSession *cloneGameSession(t_GameSession *gameSession) {
 	return clone;
 
 }
+
+/**
+ * Frees mem for dinamically allocated game session clone
+ */
+void freeGameSessionClone(t_GameSession *clone) {
+//	if (clone->Movements != NULL)
+//		free(clone->Movements);
+	free(clone);
+}

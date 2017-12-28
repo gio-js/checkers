@@ -32,6 +32,7 @@ int endPlayerMovement(t_GameSession *gameSession, int xTo, int yTo);
 t_AvailableMovement getPieceAvailableMovements(t_GameSession *gameSession, t_Piece *piece);
 t_AvailableMovement getAvailableMovements(t_GameSession *gameSession, t_Player *player);
 t_GameSession *cloneGameSession(t_GameSession *gameSession);
+void freeGameSessionClone(t_GameSession *clone);
 
 // ai_strategy
 int analyzeMovementPath(t_GameSession *gameSession, t_AvailableMovement movement, int level);
