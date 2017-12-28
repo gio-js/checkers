@@ -384,8 +384,10 @@ int endPlayerMovement(t_GameSession *gameSession, int xTo, int yTo) {
 	movement->Yto = yTo;
 
 	int check = checkIsValidMove(movement, gameSession);
-	if (check == 0)
-		return;
+	if (check == 0) {
+		int a = 1;
+		return 0;
+	}
 
 	movement->IsATake = checkIsTakeMove(movement, gameSession);
 	movement->BecomeAKing = checkIsKingMove(movement, gameSession);
@@ -476,6 +478,12 @@ int endPlayerMovement(t_GameSession *gameSession, int xTo, int yTo) {
 		gameSession->PlayerVictory = gameSession->PlayerInTurn;
 	else if (pieceLost == PLAYER_PIECE_NUMBERS)
 		gameSession->PlayerVictory = (gameSession->PlayerInTurn == &gameSession->FirstPlayer ? &gameSession->SecondPlayer : &gameSession->FirstPlayer);
+
+	// if the player who is going to move does not have any moving capability we can declare it as the loser
+	t_AvailableMovement nextPlayerAvailableMovements = getAvailableMovements(gameSession, gameSession->PlayerInTurn);
+	if (nextPlayerAvailableMovements.SourceX < 0) {
+		gameSession->PlayerVictory = (gameSession->PlayerInTurn == &gameSession->FirstPlayer ? &gameSession->SecondPlayer : &gameSession->FirstPlayer);
+	}
 
 	return score;
 }
@@ -571,7 +579,7 @@ t_AvailableMovement getAvailableMovements(t_GameSession *gameSession, t_Player *
 
 			mandatoryTakesCoordinates = *mandatoryTakesCoordinates.Next;
 		}
-		
+
 		hasMandatoryTakes = 1;
 
 		if (mandatoryTakes.Next == NULL)
@@ -587,9 +595,13 @@ t_AvailableMovement getAvailableMovements(t_GameSession *gameSession, t_Player *
 	int index = 0;
 	for(index = 0; index < TABLE_PIECE_NUMBERS; index++) {
 		t_Piece *refPiece = &gameSession->Pieces[index];
-		
+
 		// same player of the specified one?
 		if (refPiece->Player != player)
+			continue;
+
+		// piece already taken, can not move
+		if (refPiece->IsTaken == 1)
 			continue;
 
 		t_AvailableMovement pieceAvailableMovements = getPieceAvailableMovements(gameSession, refPiece);

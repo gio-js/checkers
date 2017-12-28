@@ -292,16 +292,5 @@ void renderGame(SDL_Renderer* renderer, t_GameSession *gameSession) {
 
 	// render the current game informations
 	renderGameInfo(renderer, gameSession, checkersGameWidth, gameInfoWidth, SCREEN_HEIGHT);
-
-	if (gameSession->PlayerInTurn->PlayerType == PLAYER_TYPE_COMPUTER) {
-		int result = makeMovementByCPU(gameSession);
-
-		if (result == 0) {
-			gameSession->CPU_UnableToContinue = 1;
-			gameSession->PlayerVictory = (gameSession->PlayerInTurn == &gameSession->FirstPlayer ?
-			                              &gameSession->SecondPlayer : &gameSession->FirstPlayer);
-		}
-	}
-
 }
 

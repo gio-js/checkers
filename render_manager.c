@@ -186,6 +186,31 @@ void renderMenu() {
 }
 
 /**
+ * Handle CPU player
+ */
+void handleComputerPlayer() {
+	t_GameSession *gameSession = &SharedApplicationSession.CurrentGameSession;
+	
+	if (gameSession->PlayerVictory == NULL && // game still active
+		gameSession->PlayerInTurn != NULL && // player in turn is valirized
+		gameSession->PlayerInTurn->PlayerType == PLAYER_TYPE_COMPUTER) { // the player in turn is the computer
+
+		do {
+			int result = makeMovementByCPU(gameSession);
+
+			if (result == 0) {
+				gameSession->CPU_UnableToContinue = 1;
+				gameSession->PlayerVictory = (gameSession->PlayerInTurn == &gameSession->FirstPlayer ?
+				                              &gameSession->SecondPlayer : &gameSession->FirstPlayer);
+				break;
+			}
+		} while(gameSession->MovementInProgress == 1);
+
+	}
+}
+
+
+/**
  * Renders the entire game scene, based on the application session status
  */
 void renderScene() {
@@ -212,6 +237,9 @@ void renderScene() {
 				// clear screen
 				SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 				SDL_RenderClear(renderer);
+
+				// handle CPU strategy
+				handleComputerPlayer();
 
 				// render game screen
 				switch(SharedApplicationSession.CurrentScreen) {
