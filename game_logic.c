@@ -486,7 +486,8 @@ int endPlayerMovement(t_GameSession *gameSession, int xTo, int yTo) {
 t_AvailableMovement getPieceAvailableMovements(t_GameSession *gameSession, t_Piece *piece) {
 	t_AvailableMovement availableMovements;
 	availableMovements.Next = NULL;
-	availableMovements.Piece = NULL;
+	availableMovements.SourceX = -1;
+	availableMovements.SourceY = -1;
 	availableMovements.DestinationX = -1;
 	availableMovements.DestinationY = -1;
 	int** adiacentDiagonalCells = getValidPieceDiagonalOffset(piece);
@@ -516,13 +517,14 @@ t_AvailableMovement getPieceAvailableMovements(t_GameSession *gameSession, t_Pie
 
 			// the cell is empty, specify piece is allowed to move in
 			if (diagonalPiece == NULL) {
-				if (availableMovements.Piece != NULL) {
+				if (availableMovements.SourceX >= 0) {
 					t_AvailableMovement* lastAvailableMovement = (t_AvailableMovement*)malloc(sizeof(t_AvailableMovement));
 					(*lastAvailableMovement) = availableMovements;
 					availableMovements.Next = lastAvailableMovement;
 				}
 
-				availableMovements.Piece = piece;
+				availableMovements.SourceX = piece->X;
+				availableMovements.SourceY = piece->Y;
 				availableMovements.DestinationX = diagonalPieceX;
 				availableMovements.DestinationY = diagonalPieceY;
 			}
@@ -538,7 +540,8 @@ t_AvailableMovement getPieceAvailableMovements(t_GameSession *gameSession, t_Pie
 t_AvailableMovement getAvailableMovements(t_GameSession *gameSession, t_Player *player) {
 	t_AvailableMovement availableMovements;
 	availableMovements.Next = NULL;
-	availableMovements.Piece = NULL;
+	availableMovements.SourceX = -1;
+	availableMovements.SourceY = -1;
 	availableMovements.DestinationX = -1;
 	availableMovements.DestinationY = -1;
 
@@ -552,13 +555,14 @@ t_AvailableMovement getAvailableMovements(t_GameSession *gameSession, t_Player *
 
 		while(mandatoryTakesCoordinates.Piece != NULL) {
 
-			if (availableMovements.Piece != NULL) {
+			if (availableMovements.SourceX >= 0) {
 				t_AvailableMovement* lastAvailableMovement = (t_AvailableMovement*)malloc(sizeof(t_AvailableMovement));
 				(*lastAvailableMovement) = availableMovements;
 				availableMovements.Next = lastAvailableMovement;
 			}
 
-			availableMovements.Piece = mandatoryTakes.ReferredPiece;
+			availableMovements.SourceX = mandatoryTakes.ReferredPiece->X;
+			availableMovements.SourceY = mandatoryTakes.ReferredPiece->Y;
 			availableMovements.DestinationX = mandatoryTakesCoordinates.DestinationX;
 			availableMovements.DestinationY = mandatoryTakesCoordinates.DestinationY;
 
@@ -567,9 +571,13 @@ t_AvailableMovement getAvailableMovements(t_GameSession *gameSession, t_Player *
 
 			mandatoryTakesCoordinates = *mandatoryTakesCoordinates.Next;
 		}
+		
+		hasMandatoryTakes = 1;
+
+		if (mandatoryTakes.Next == NULL)
+			break;
 
 		mandatoryTakes = *mandatoryTakes.Next;
-		hasMandatoryTakes = 1;
 	}
 
 	if (hasMandatoryTakes == 1)
@@ -579,17 +587,22 @@ t_AvailableMovement getAvailableMovements(t_GameSession *gameSession, t_Player *
 	int index = 0;
 	for(index = 0; index < TABLE_PIECE_NUMBERS; index++) {
 		t_Piece *refPiece = &gameSession->Pieces[index];
+		
+		// same player of the specified one?
+		if (refPiece->Player != player)
+			continue;
 
 		t_AvailableMovement pieceAvailableMovements = getPieceAvailableMovements(gameSession, refPiece);
-		while(pieceAvailableMovements.Piece != NULL) {
+		while(pieceAvailableMovements.SourceX >= 0) {
 
-			if (availableMovements.Piece != NULL) {
+			if (availableMovements.SourceX >= 0) {
 				t_AvailableMovement* lastAvailableMovement = (t_AvailableMovement*)malloc(sizeof(t_AvailableMovement));
 				(*lastAvailableMovement) = availableMovements;
 				availableMovements.Next = lastAvailableMovement;
 			}
 
-			availableMovements.Piece = pieceAvailableMovements.Piece;
+			availableMovements.SourceX = pieceAvailableMovements.SourceX;
+			availableMovements.SourceY = pieceAvailableMovements.SourceY;
 			availableMovements.DestinationX = pieceAvailableMovements.DestinationX;
 			availableMovements.DestinationY = pieceAvailableMovements.DestinationY;
 
@@ -626,6 +639,7 @@ t_GameSession *cloneGameSession(t_GameSession *gameSession) {
 		clone->Pieces[index].IsTaken = gameSession->Pieces[index].IsTaken;
 		clone->Pieces[index].Pawn = gameSession->Pieces[index].Pawn;
 		clone->Pieces[index].X = gameSession->Pieces[index].X;
+		clone->Pieces[index].Y = gameSession->Pieces[index].Y;
 
 		if (gameSession->Pieces[index].Player == &gameSession->FirstPlayer)
 			clone->Pieces[index].Player = &clone->FirstPlayer;
@@ -634,15 +648,23 @@ t_GameSession *cloneGameSession(t_GameSession *gameSession) {
 
 	}
 
+	t_MoveStory *moveStory = (t_MoveStory*)malloc(sizeof(t_MoveStory));
+	clone->Movements = moveStory;
 	clone->Movements->Movement = NULL;
 	clone->Movements->PreviousMovement = NULL;
 	clone->CursorX = gameSession->CursorX;
 	clone->CursorY = gameSession->CursorY;
 	clone->MovementInProgress = gameSession->MovementInProgress;
+
+
 	clone->CurrentMovements.Movement = NULL;
 	clone->CurrentMovements.PreviousMovement = NULL;
+
+
 	clone->PlayerMandatoryTakes.Next = NULL;
 	clone->PlayerMandatoryTakes.ReferredPiece = NULL;
+
+
 	clone->PlayerMandatoryTakes.MandatoryTakes.Next = NULL;
 	clone->PlayerMandatoryTakes.MandatoryTakes.Piece = NULL;
 	clone->HasPlayerMandatoryTakes = 0;

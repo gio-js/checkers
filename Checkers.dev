@@ -29,7 +29,7 @@ IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=1
 CompilerSettings=0000000000000000001000000
-UnitCount=13
+UnitCount=14
 
 [VersionInfo]
 Major=1
@@ -71,7 +71,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit2]
-FileName=solution_strategy.c
+FileName=ai_strategy.c
 CompileCpp=0
 Folder=ai
 Compile=1
@@ -151,9 +151,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit14]
-FileName=game_logic.c
+FileName=functions.h
 CompileCpp=0
-Folder=core
+Folder=include
 Compile=1
 Link=1
 Priority=1000

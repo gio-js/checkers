@@ -33,7 +33,7 @@ t_AvailableMovement getPieceAvailableMovements(t_GameSession *gameSession, t_Pie
 t_AvailableMovement getAvailableMovements(t_GameSession *gameSession, t_Player *player);
 t_GameSession *cloneGameSession(t_GameSession *gameSession);
 
-// solution_strategy
+// ai_strategy
 int analyzeMovementPath(t_GameSession *gameSession, t_AvailableMovement movement, int level, int score);
 t_AvailableMovement findBestAvailableMovement(t_GameSession *gameSession);
 int makeMovementByCPU(t_GameSession *gameSession);

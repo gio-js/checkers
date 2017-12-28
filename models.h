@@ -76,9 +76,11 @@ typedef struct MoveStory {
 
 /*
  * Defines a list of available movements for the specified cell
+ * NOTE: we will not store any Piece struct reference beacuse we need to stay agnostic about the current game session and memory pointers
  */
 typedef struct AvailableMovement {
-	t_Piece *Piece; // the piece that can be moved
+	int SourceX; // the piece that can be moved X coordinate
+	int SourceY; // the piece that can be moved Y coordinate
 	int DestinationX; // x coordinate where the specified piece can be placed
 	int DestinationY; // y coordinate where the specified piece can be placed
 	struct AvailableMovement* Next; // next available movement

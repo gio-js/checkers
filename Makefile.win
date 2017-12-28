@@ -4,8 +4,8 @@
 CPP      = g++.exe -D__DEBUG__
 CC       = gcc.exe -D__DEBUG__
 WINDRES  = windres.exe
-OBJ      = obj/main.o obj/solution_strategy.o obj/render_manager.o obj/session.o obj/utils.o obj/render_game.o obj/render_generic.o obj/game_logic.o obj/shared.o
-LINKOBJ  = obj/main.o obj/solution_strategy.o obj/render_manager.o obj/session.o obj/utils.o obj/render_game.o obj/render_generic.o obj/game_logic.o obj/shared.o
+OBJ      = obj/main.o obj/ai_strategy.o obj/render_manager.o obj/session.o obj/utils.o obj/render_game.o obj/render_generic.o obj/game_logic.o obj/shared.o
+LINKOBJ  = obj/main.o obj/ai_strategy.o obj/render_manager.o obj/session.o obj/utils.o obj/render_game.o obj/render_generic.o obj/game_logic.o obj/shared.o
 LIBS     = -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib" -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/lib" -static-libgcc -L"C:/software/checkers/SDL2-2.0.7/x86_64-w64-mingw32/lib" -L"C:/software/checkers/SDL2-2.0.7/i686-w64-mingw32/lib" -lws2_32 -lSDL2main -lSDL2 -lSDL2_ttf -lSDL2_image -g3
 INCS     = -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include" -I"C:/software/checkers/SDL2-2.0.7/x86_64-w64-mingw32/include" -I"C:/software/checkers/SDL2-2.0.7/i686-w64-mingw32/include"
 CXXINCS  = -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include/c++" -I"C:/software/checkers/SDL2-2.0.7/x86_64-w64-mingw32/include" -I"C:/software/checkers/SDL2-2.0.7/i686-w64-mingw32/include"
@@ -27,8 +27,8 @@ $(BIN): $(OBJ)
 obj/main.o: main.c
 	$(CC) -c main.c -o obj/main.o $(CFLAGS)
 
-obj/solution_strategy.o: solution_strategy.c
-	$(CC) -c solution_strategy.c -o obj/solution_strategy.o $(CFLAGS)
+obj/ai_strategy.o: ai_strategy.c
+	$(CC) -c ai_strategy.c -o obj/ai_strategy.o $(CFLAGS)
 
 obj/render_manager.o: render_manager.c
 	$(CC) -c render_manager.c -o obj/render_manager.o $(CFLAGS)

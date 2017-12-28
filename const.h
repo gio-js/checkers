@@ -33,6 +33,9 @@
 // score weight for a movement king
 #define MOVEMENT_KING_SCORE_WEIGHT 0.5
 
+// specify how deeply the AI analyzer should dive in the solution tree during recursive movements scan
+#define AI_DEEP_PATH_ANALYSIS 3
+
 // colors
 static const SDL_Color COLOR_FIREBRICK = (SDL_Color){ 70, 13, 13 };
 static const SDL_Color COLOR_WHITE = (SDL_Color){ 255, 255, 255 };
